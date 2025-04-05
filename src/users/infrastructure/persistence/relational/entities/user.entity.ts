@@ -16,7 +16,8 @@ import { FileEntity } from '../../../../../files/infrastructure/persistence/rela
 
 import { AuthProvidersEnum } from '../../../../../auth/auth-providers.enum';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
+import { DeviceStatus } from '../../../../../devices/domain/device-status.enum';
 
 @Entity({
   name: 'user',
@@ -64,6 +65,14 @@ export class UserEntity extends EntityRelationalHelper {
     eager: true,
   })
   status?: StatusEntity;
+
+  @Column({ type: 'int', default: DeviceStatus.OFFLINE })
+  statusId?: number;
+
+  @Expose()
+  get fullName(): string {
+    return [this.firstName, this.lastName].filter(Boolean).join(' ');
+  }
 
   @CreateDateColumn()
   createdAt: Date;

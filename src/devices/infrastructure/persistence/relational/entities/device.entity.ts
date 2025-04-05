@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   BeforeInsert,
+  DeleteDateColumn,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { UserEntity } from '../../../../../users/infrastructure/persistence/relational/entities/user.entity';
@@ -66,11 +67,17 @@ export class DeviceEntity extends EntityRelationalHelper {
   @Exclude()
   deviceToken: string;
 
+  @Column({ type: 'int', nullable: true })
+  templateId: number;
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
 
   @BeforeInsert()
   async hashDeviceToken() {
