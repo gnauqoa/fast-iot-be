@@ -50,7 +50,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       })
       .andWhere('role = :role', { role: DeviceRole.DEVICE })
       .andWhere('device.status = :status', {
-        status: status ? DeviceStatus[status] : DeviceStatus.ONLINE,
+        status: status ? DeviceStatus[status] : DeviceStatus.OFFLINE,
       })
       .getCount();
 
@@ -63,7 +63,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       })
       .andWhere('role = :role', { role: DeviceRole.DEVICE })
       .andWhere('device.status = :status', {
-        status: status ? DeviceStatus[status] : DeviceStatus.ONLINE,
+        status: status ? DeviceStatus[status] : DeviceStatus.OFFLINE,
       })
       .skip((page - 1) * limit)
       .take(limit)

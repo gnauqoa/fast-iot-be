@@ -27,7 +27,7 @@ export class CreateTemplate1743767396079 implements MigrationInterface {
             type: 'int',
           },
           {
-            name: 'renderData',
+            name: 'prototype',
             type: 'json',
             isNullable: true,
           },
@@ -57,11 +57,6 @@ export class CreateTemplate1743767396079 implements MigrationInterface {
     );
 
     await queryRunner.addColumns('device', [
-      new TableColumn({
-        name: 'deletedAt',
-        type: 'timestamp',
-        isNullable: true,
-      }),
       new TableColumn({
         name: 'templateId',
         type: 'int',

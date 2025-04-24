@@ -8,6 +8,7 @@ import {
   DeleteDateColumn,
 } from 'typeorm';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
+import { Transform } from 'class-transformer';
 
 @Entity({
   name: 'template',
@@ -26,7 +27,10 @@ export class TemplateEntity extends EntityRelationalHelper {
   userId: number;
 
   @Column({ type: 'json', nullable: true })
-  renderData: any; // Adjust type as necessary
+  @Transform(({ value }) => {
+    return value ?? {};
+  })
+  prototype: any; // Adjust type as necessary
 
   @Column({ type: 'boolean', default: false })
   public: boolean;
