@@ -20,6 +20,7 @@ import {
   DeviceStatusStr,
 } from '../../../../domain/device-status.enum';
 import { DeviceRole, DeviceRoleMap } from '../../../../domain/device-role.enum';
+import { TemplateEntity } from '../../../../../templates/infrastructure/persistence/relational/entities/template.entity';
 
 @Entity({
   name: 'device',
@@ -66,6 +67,9 @@ export class DeviceEntity extends EntityRelationalHelper {
   @Column({ type: 'varchar', nullable: false })
   @Exclude()
   deviceToken: string;
+
+  @ManyToOne(() => TemplateEntity)
+  template: TemplateEntity;
 
   @Column({ type: 'int', nullable: true })
   templateId: number;

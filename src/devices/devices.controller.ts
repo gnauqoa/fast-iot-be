@@ -42,7 +42,9 @@ import bcrypt from 'bcryptjs';
     softDelete: true,
     join: {
       user: { eager: true },
+      template: { eager: true },
     },
+    sort: [{ field: 'createdAt', order: 'DESC' }],
   },
 
   routes: {

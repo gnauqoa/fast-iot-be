@@ -7,6 +7,7 @@ import { UserEntity } from '../../../../users/infrastructure/persistence/relatio
 import { ConfigService } from '@nestjs/config';
 import { DeviceRole } from '../../../../devices/domain/device-role.enum';
 import * as crypto from 'crypto';
+import { TemplateEntity } from '../../../../templates/infrastructure/persistence/relational/entities/template.entity';
 
 @Injectable()
 export class DeviceSeedService {
@@ -16,6 +17,8 @@ export class DeviceSeedService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     private readonly configService: ConfigService,
+    @InjectRepository(TemplateEntity)
+    private templateRepository: Repository<TemplateEntity>,
   ) {}
 
   async run() {
@@ -48,6 +51,9 @@ export class DeviceSeedService {
     const users = await this.userRepository.find({});
     const userIds = users.map((user) => user.id);
 
+    const templates = await this.templateRepository.find({});
+    const templateIds = templates.map((template) => template.id);
+
     const devices = Array.from({ length: 30 }, () => {
       return this.repository.create({
         name: faker.vehicle.vehicle(),
@@ -55,6 +61,7 @@ export class DeviceSeedService {
         deviceKey: crypto.randomBytes(16).toString('hex'),
         deviceToken: crypto.randomBytes(16).toString('hex'),
         role: DeviceRole.DEVICE,
+        templateId: templateIds[Math.floor(Math.random() * templateIds.length)],
       });
     });
 

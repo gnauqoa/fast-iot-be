@@ -21,6 +21,7 @@ import { MailerModule } from './mailer/mailer.module';
 import { DevicesModule } from './devices/devices.module';
 import { SocketIoGateway } from './socket-io/socket-io.gateway';
 import { CheckDeviceService } from './cron/check-device.service';
+import { TemplatesModule } from './templates/templates.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -31,6 +32,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
 
 @Module({
   imports: [
+    TemplatesModule,
     DevicesModule,
     ConfigModule.forRoot({
       isGlobal: true,

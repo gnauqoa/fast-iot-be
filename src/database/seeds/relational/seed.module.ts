@@ -9,12 +9,13 @@ import { StatusSeedModule } from './status/status-seed.module';
 import { UserSeedModule } from './user/user-seed.module';
 import databaseConfig from '../../config/database.config';
 import appConfig from '../../../config/app.config';
-
-import { deviceSeedModule } from './device/device-seed.module';
+import { DeviceSeedModule } from './device/device-seed.module';
+import { TemplateSeedModule } from './template/template-seed.module';
 
 @Module({
   imports: [
-    deviceSeedModule,
+    TemplateSeedModule,
+    DeviceSeedModule,
     RoleSeedModule,
     StatusSeedModule,
     UserSeedModule,
