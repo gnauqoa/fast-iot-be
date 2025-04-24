@@ -41,7 +41,6 @@ export class DeviceSeedService {
     await this.repository
       .create({
         name: 'Admin',
-        userId: 1,
         deviceKey: adminMqttUser,
         deviceToken: adminMqttPassword,
         role: DeviceRole.ADMIN,

@@ -31,6 +31,5 @@ export class CreateDevice1743498401382 implements MigrationInterface {
         DROP INDEX "idx_device_position";
         DROP TABLE "device";
     `);
-    await queryRunner.query(`DROP EXTENSION IF EXISTS postgis;`);
   }
 }
