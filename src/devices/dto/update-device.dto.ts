@@ -7,7 +7,9 @@ import { CreateDeviceDto } from './create-device.dto';
 export class UpdatedeviceDto extends PartialType(CreateDeviceDto) {}
 export class UpdateDevicePinDto {
   id: number;
+  channels: [];
 }
 export class UpdateDeviceSensorDto extends UpdateDevicePinDto {
   id: number;
+  channels: [];
 }

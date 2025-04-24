@@ -28,10 +28,7 @@ import { UpdateTemplateDto } from './dto/update-template.dto';
     limit: 10,
     cache: 0,
     softDelete: true,
-    join: {
-      user: { eager: true },
-      template: { eager: true },
-    },
+    join: {},
     sort: [{ field: 'createdAt', order: 'DESC' }],
   },
   routes: {

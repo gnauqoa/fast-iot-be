@@ -30,6 +30,7 @@ export class DeviceOwnershipGuard implements CanActivate {
         alias: 'device',
         leftJoinAndSelect: {
           user: 'device.user',
+          template: 'device.template',
         },
       },
     });

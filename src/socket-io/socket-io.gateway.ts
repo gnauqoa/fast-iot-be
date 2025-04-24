@@ -63,7 +63,7 @@ export class SocketIoGateway
   }
 
   @UseGuards(WsAuthGuard, WsDeviceGuard)
-  @SubscribeMessage('update_device_pin')
+  @SubscribeMessage('device/update')
   async handleUpdateDevice(
     @MessageBody() data: any,
     @ConnectedSocket() client: Socket,

@@ -60,6 +60,10 @@ export class DeviceEntity extends EntityRelationalHelper {
   @Exclude()
   role: number;
 
+  @Column({ type: 'jsonb', nullable: true })
+  @Transform(({ value }) => value ?? [])
+  channels: any;
+
   @Column({ type: 'varchar', unique: true })
   @Exclude()
   deviceKey: string;
