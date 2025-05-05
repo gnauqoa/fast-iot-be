@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { connect, MqttClient } from 'mqtt';
 import { error, info } from 'ps-logger';
 import { DevicesService } from '../devices/devices.service';
-import { DeviceEntity } from '../devices/infrastructure/persistence/relational/entities/device.entity';
+import { UpdateDeviceSensorDto } from '../devices/dto/update-device.dto';
 
 @Injectable()
 export class MqttService implements OnModuleInit {
@@ -64,7 +64,7 @@ export class MqttService implements OnModuleInit {
     });
   }
 
-  private async handleDeviceUpdate(data: DeviceEntity) {
+  private async handleDeviceUpdate(data: UpdateDeviceSensorDto) {
     try {
       info(`MQTT - Device update sensor: ${JSON.stringify(data)}`);
       await this.deviceService.mqttUpdate(data.id, data);

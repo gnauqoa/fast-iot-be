@@ -7,12 +7,14 @@ import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
 import { MqttModule } from '../mqtt/mqtt.module';
 import { SocketIoModule } from '../socket-io/socket-io.module';
+import { ChannelsModule } from '../channels/channels.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([DeviceEntity]),
     AuthModule,
     UsersModule,
+    ChannelsModule,
     forwardRef(() => MqttModule),
     forwardRef(() => SocketIoModule),
   ],

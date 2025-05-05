@@ -11,6 +11,10 @@ export type DatabaseConfig = {
   maxConnections: number;
   sslEnabled?: boolean;
   rejectUnauthorized?: boolean;
+  documentUrl?: string;
+  documentName?: string;
+  documentUsername?: string;
+  documentPassword?: string;
   ca?: string;
   key?: string;
   cert?: string;

@@ -11,7 +11,7 @@ import { DeviceEntity } from './infrastructure/persistence/relational/entities/d
 import { DevicesService } from './devices.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RoleEnum } from '../roles/roles.enum';
-import { UpdatedeviceDto } from './dto/update-device.dto';
+import { UpdateDeviceDto } from './dto/update-device.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { SCondition } from '@dataui/crud-request/lib/types/request-query.types';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -25,13 +25,14 @@ import { Roles } from '../roles/roles.decorator';
 import { ScanDevicesDto } from './dto/scan-devices.dto';
 import { DeviceStatusStr } from './domain/device-status.enum';
 import bcrypt from 'bcryptjs';
+import { ChannelsService } from '../channels/channels.service';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Crud({
   model: { type: DeviceEntity },
   dto: {
-    update: UpdatedeviceDto,
+    update: UpdateDeviceDto,
     create: CreateDeviceDto,
   },
   query: {
@@ -57,6 +58,7 @@ export class DevicesController implements CrudController<DeviceEntity> {
   constructor(
     public service: DevicesService,
     @InjectRepository(DeviceEntity) public repo: Repository<DeviceEntity>,
+    private readonly channelService: ChannelsService,
   ) {}
 
   get base(): CrudController<DeviceEntity> {
@@ -105,15 +107,18 @@ export class DevicesController implements CrudController<DeviceEntity> {
 
   @Override('getOneBase')
   @UseGuards(DeviceOwnershipGuard)
-  ovGetOneBase(@Request() request: any): Promise<DeviceEntity> {
-    return request.device;
+  async ovGetOneBase(@Request() request: any): Promise<DeviceEntity> {
+    const channels = await this.channelService.getDeviceChannel(
+      request.device.id,
+    );
+    return { ...request.device, channels };
   }
 
   @Override('updateOneBase')
   @UseGuards(DeviceOwnershipGuard)
   async ovUpdateOneBase(
     @ParsedRequest() req: CrudRequest,
-    @ParsedBody() dto: UpdatedeviceDto,
+    @ParsedBody() dto: UpdateDeviceDto,
   ): Promise<DeviceEntity> {
     return await this.service.updateOne(req, {
       ...dto,
@@ -134,6 +139,24 @@ export class DevicesController implements CrudController<DeviceEntity> {
       ...request.device,
       deviceToken: deviceToken,
     };
+  }
+
+  @Override('createOneBase')
+  async ovCreateOneBase(
+    @ParsedRequest() req: CrudRequest,
+    @ParsedBody() dto: CreateDeviceDto,
+  ): Promise<DeviceEntity> {
+    const device = await this.service.createOne(req, {
+      ...dto,
+    });
+
+    const channels = await this.channelService.create({
+      deviceId: device.id,
+    });
+
+    device.channels = channels;
+
+    return device;
   }
 
   @Override('deleteOneBase')

@@ -22,6 +22,8 @@ import { DevicesModule } from './devices/devices.module';
 import { SocketIoGateway } from './socket-io/socket-io.gateway';
 import { CheckDeviceService } from './cron/check-device.service';
 import { TemplatesModule } from './templates/templates.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { MongooseConfigService } from './database/mongoose-config.service';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -40,6 +42,9 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
       envFilePath: ['.env'],
     }),
     infrastructureDatabaseModule,
+    MongooseModule.forRootAsync({
+      useClass: MongooseConfigService,
+    }),
     I18nModule.forRootAsync({
       useFactory: (configService: ConfigService<AllConfigType>) => ({
         fallbackLanguage: configService.getOrThrow('app.fallbackLanguage', {

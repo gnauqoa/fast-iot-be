@@ -1,32 +1,60 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { DeviceEntity } from './infrastructure/persistence/relational/entities/device.entity';
-import { TypeOrmCrudService } from '@dataui/crud-typeorm';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryRunner, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { TypeOrmCrudService } from '@dataui/crud-typeorm';
+import { info } from 'ps-logger';
+
+// Domain imports
+import { DeviceStatus, DeviceStatusStr } from './domain/device-status.enum';
+import { DeviceRole } from './domain/device-role.enum';
+
+// Entity imports
+import { DeviceEntity } from './infrastructure/persistence/relational/entities/device.entity';
+
+// Service imports
 import { MqttService } from '../mqtt/mqtt.service';
 import { SocketIoGateway } from '../socket-io/socket-io.gateway';
-import { info } from 'ps-logger';
-import { CrudRequest } from '@dataui/crud';
-import { DeviceStatus, DeviceStatusStr } from './domain/device-status.enum';
+import { ChannelRepository } from '../channels/infrastructure/persistence/channel.repository';
+
+// DTO imports
 import {
   UpdateDevicePinDto,
   UpdateDeviceSensorDto,
 } from './dto/update-device.dto';
-import { DeviceRole } from './domain/device-role.enum';
 import { ScanDevicesDto } from './dto/scan-devices.dto';
+import { createPaginatedResult } from '../utils/pagination';
+import { createPointExpression } from '../utils/position';
+import { METERS_PER_DEGREE } from '../../test/utils/constants';
 
+/**
+ * Service for handling device operations including geographic scanning,
+ * socket updates, and MQTT communication
+ *
+ * Extends TypeOrmCrudService to provide CRUD operations for DeviceEntity
+ */
 @Injectable()
 export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
   constructor(
     @InjectRepository(DeviceEntity) repo: Repository<DeviceEntity>,
     @Inject(forwardRef(() => MqttService))
-    private mqttService: MqttService,
+    private readonly mqttService: MqttService,
     @Inject(forwardRef(() => SocketIoGateway))
-    private socketIoGateway: SocketIoGateway,
+    private readonly socketIoGateway: SocketIoGateway,
+    private readonly channelRepository: ChannelRepository,
   ) {
     super(repo);
   }
 
+  /**
+   * Scan for nearby devices based on geographical location and filters
+   * @param params - ScanDevicesDto containing location, radius and filter options
+   * @returns Paginated list of devices within the specified radius
+   */
   async scanNearbyDevices({
     latitude,
     longitude,
@@ -35,15 +63,12 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     limit = 10,
     status,
   }: ScanDevicesDto) {
-    // Convert radius from meters to degrees (approximate)
-    // 1 degree is approximately 111,320 meters at the equator
-    const radiusInDegrees = radius / 111320;
+    // Convert radius from meters to degrees (approximate at the equator)
+    const radiusInDegrees = radius / METERS_PER_DEGREE;
+    const point = createPointExpression(longitude, latitude);
 
-    // Create a point from the given coordinates
-    const point = `ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)`;
-
-    // Get total count of devices within radius
-    const total = await this.repo
+    // Build the base query that will be reused
+    const baseQuery = this.repo
       .createQueryBuilder('device')
       .where(`ST_DWithin(device.position, ${point}, :radius)`, {
         radius: radiusInDegrees,
@@ -51,103 +76,125 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       .andWhere('role = :role', { role: DeviceRole.DEVICE })
       .andWhere('device.status = :status', {
         status: status ? DeviceStatus[status] : DeviceStatus.OFFLINE,
-      })
-      .getCount();
+      });
 
-    // Find devices within the radius with pagination
-    const devices = await this.repo
-      .createQueryBuilder('device')
+    // Get total count
+    const total = await baseQuery.clone().getCount();
+
+    // Get paginated results with relations
+    const devices = await baseQuery
       .leftJoinAndSelect('device.user', 'user')
-      .where(`ST_DWithin(device.position, ${point}, :radius)`, {
-        radius: radiusInDegrees,
-      })
-      .andWhere('role = :role', { role: DeviceRole.DEVICE })
-      .andWhere('device.status = :status', {
-        status: status ? DeviceStatus[status] : DeviceStatus.OFFLINE,
-      })
       .skip((page - 1) * limit)
       .take(limit)
       .getMany();
 
-    return {
-      data: devices,
-      count: devices.length,
-      total,
-      page,
-      pageCount: Math.ceil(total / limit),
-    };
+    // Return paginated results
+    return createPaginatedResult(devices, total, page, limit);
   }
 
-  async socketUpdate(id: number, payload: UpdateDevicePinDto) {
-    const queryRunner: QueryRunner =
-      this.repo.manager.connection.createQueryRunner();
+  /**
+   * Find a device by ID with user relation
+   * @param id - Device ID
+   * @returns Device entity with relations or throws NotFoundException
+   */
+  private async findDeviceWithUser(id: number): Promise<DeviceEntity> {
+    const device = await this.repo.findOne({
+      where: { id },
+      relations: ['user'],
+    });
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      const device = await queryRunner.manager.findOne(DeviceEntity, {
-        where: { id },
-        lock: { mode: 'pessimistic_write' },
-      });
-
-      if (!device) {
-        throw new Error('Device not found');
-      }
-
-      if (true) {
-        info(`Device updated: ${JSON.stringify(payload)}`);
-
-        await queryRunner.manager.update(DeviceEntity, id, payload);
-
-        this.mqttService.publicMessage(`device/${id}`, {});
-
-        const newDevice = await queryRunner.manager.findOne(DeviceEntity, {
-          where: { id },
-          join: {
-            alias: 'device',
-            leftJoinAndSelect: {
-              user: 'device.user',
-            },
-          },
-        });
-
-        this.socketIoGateway.emitToRoom(
-          `device/${id}`,
-          'device_data',
-          newDevice,
-        );
-
-        await queryRunner.commitTransaction();
-
-        return payload;
-      }
-
-      await queryRunner.commitTransaction();
-      return false;
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err; // Ném lỗi để xử lý ở tầng trên
-    } finally {
-      await queryRunner.release();
+    if (!device) {
+      throw new NotFoundException(`Device with ID ${id} not found`);
     }
+
+    return device;
   }
 
-  async mqttUpdate(id: number, device: UpdateDeviceSensorDto) {
-    const queryRunner: QueryRunner =
-      this.repo.manager.connection.createQueryRunner();
+  /**
+   * Notifies clients about device updates via WebSocket
+   * @param deviceId - ID of the device
+   * @param deviceData - Device data to send
+   */
+  private notifyClients(deviceId: number, deviceData: any): void {
+    this.socketIoGateway.emitToRoom(
+      `device/${deviceId}`,
+      'device_data',
+      deviceData,
+    );
+  }
+
+  /**
+   * Update device channels via socket connection
+   * @param id - Device ID
+   * @param payload - Channel update information
+   * @returns Updated device with channel information
+   */
+  async socketUpdate(id: number, payload: UpdateDevicePinDto) {
+    const device = await this.findDeviceWithUser(id);
+
+    // Transform channel data and update in MongoDB
+    const channelData = payload.channels;
+    const channels = await this.channelRepository.updateDeviceChannel(
+      device.id,
+      channelData,
+    );
+
+    // Combine device with channels data
+    const updatedDevice = {
+      ...device,
+      channels,
+    };
+
+    // Notify via MQTT and WebSockets
+    this.mqttService.publicMessage(`device/${id}`, channels);
+    this.notifyClients(id, updatedDevice);
+
+    return updatedDevice;
+  }
+
+  /**
+   * Update device status and information via MQTT
+   * @param id - Device ID
+   * @param deviceData - Updated device information
+   * @returns Updated device entity with channels
+   */
+  async mqttUpdate(id: number, deviceData: UpdateDeviceSensorDto) {
+    const queryRunner = this.repo.manager.connection.createQueryRunner();
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      await queryRunner.manager.update(DeviceEntity, id, {
-        ...device,
+      // Create base update query
+      const baseQuery = queryRunner.manager
+        .createQueryBuilder()
+        .update(DeviceEntity)
+        .where('id = :id', { id });
+
+      // Prepare update data
+      const updateData: Partial<DeviceEntity> = {
         status: DeviceStatusStr.ONLINE,
         lastUpdate: new Date(),
-      });
+      };
 
-      const newDevice = await queryRunner.manager.findOne(DeviceEntity, {
+      // Add position update if coordinates are provided
+      if (deviceData.latitude && deviceData.longitude) {
+        const longitude = parseFloat(deviceData.longitude);
+        const latitude = parseFloat(deviceData.latitude);
+
+        baseQuery.set({
+          ...updateData,
+          position: () => createPointExpression(longitude, latitude),
+        });
+      } else {
+        baseQuery.set(updateData);
+      }
+
+      // Execute update
+      await baseQuery.execute();
+
+      // Retrieve updated device with relations
+      const updatedDevice = await queryRunner.manager.findOne(DeviceEntity, {
         where: { id },
         join: {
           alias: 'device',
@@ -157,32 +204,31 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
         },
       });
 
+      // Update channels if provided
+      const channelData = deviceData.channels;
+      const channels = await this.channelRepository.updateDeviceChannel(
+        id,
+        channelData,
+      );
+
       await queryRunner.commitTransaction();
 
-      info(`Device updated: ${JSON.stringify(newDevice)}`);
+      info(`Device updated: ${JSON.stringify(updatedDevice)}`);
 
-      this.socketIoGateway.emitToRoom(`device/${id}`, 'device_data', newDevice);
+      // Combine device with channels and notify clients
+      const deviceWithChannels = {
+        ...updatedDevice,
+        channels,
+      };
 
-      return newDevice;
+      this.notifyClients(id, deviceWithChannels);
+
+      return deviceWithChannels;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;
     } finally {
       await queryRunner.release();
     }
-  }
-
-  async updateDevice(req: CrudRequest, dto: UpdateDevicePinDto) {
-    const newDevice = await this.updateOne(req, dto);
-
-    this.socketIoGateway.emitToRoom(
-      `device/${newDevice.id}`,
-      'device_data',
-      newDevice,
-    );
-
-    this.mqttService.publicMessage(`device/${newDevice.id}`, {});
-
-    return newDevice;
   }
 }

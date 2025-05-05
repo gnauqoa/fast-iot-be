@@ -5,3 +5,5 @@ export const ADMIN_EMAIL = 'admin@example.com';
 export const ADMIN_PASSWORD = 'secret';
 export const MAIL_HOST = process.env.MAIL_HOST;
 export const MAIL_PORT = process.env.MAIL_CLIENT_PORT;
+export const METERS_PER_DEGREE = 111320; // Approximate meters per degree at the equator
+export const SRID = 4326; // Spatial Reference ID (WGS 84)

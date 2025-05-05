@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { DeviceRole } from '../../../../devices/domain/device-role.enum';
 import * as crypto from 'crypto';
 import { TemplateEntity } from '../../../../templates/infrastructure/persistence/relational/entities/template.entity';
+import { METERS_PER_DEGREE } from '../../../../../test/utils/constants';
 
 @Injectable()
 export class DeviceSeedService {
@@ -69,10 +70,10 @@ export class DeviceSeedService {
     for (const device of savedDevices) {
       const lng =
         areaCoordinates.lng +
-        ((Math.random() - 0.01) * areaCoordinates.radius) / 111320;
+        ((Math.random() - 0.01) * areaCoordinates.radius) / METERS_PER_DEGREE;
       const lat =
         areaCoordinates.lat +
-        ((Math.random() - 0.01) * areaCoordinates.radius) / 111320;
+        ((Math.random() - 0.01) * areaCoordinates.radius) / METERS_PER_DEGREE;
 
       await this.repository
         .createQueryBuilder()

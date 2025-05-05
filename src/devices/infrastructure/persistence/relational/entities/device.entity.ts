@@ -21,6 +21,7 @@ import {
 } from '../../../../domain/device-status.enum';
 import { DeviceRole, DeviceRoleMap } from '../../../../domain/device-role.enum';
 import { TemplateEntity } from '../../../../../templates/infrastructure/persistence/relational/entities/template.entity';
+import { channel } from '../../../../../channels/domain/channel';
 
 @Entity({
   name: 'device',
@@ -60,9 +61,7 @@ export class DeviceEntity extends EntityRelationalHelper {
   @Exclude()
   role: number;
 
-  @Column({ type: 'jsonb', nullable: true })
-  @Transform(({ value }) => value ?? [])
-  channels: any;
+  channels?: channel;
 
   @Column({ type: 'varchar', unique: true })
   @Exclude()

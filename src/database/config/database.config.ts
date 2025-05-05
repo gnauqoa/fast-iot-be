@@ -70,6 +70,22 @@ class EnvironmentVariablesValidator {
   @IsString()
   @IsOptional()
   DATABASE_CERT: string;
+
+  @IsString()
+  @IsOptional()
+  DOCUMENT_URL: string;
+
+  @IsString()
+  @IsOptional()
+  DOCUMENT_NAME: string;
+
+  @IsString()
+  @IsOptional()
+  DOCUMENT_USERNAME: string;
+
+  @IsString()
+  @IsOptional()
+  DOCUMENT_PASSWORD: string;
 }
 
 export default registerAs<DatabaseConfig>('database', () => {
@@ -95,5 +111,9 @@ export default registerAs<DatabaseConfig>('database', () => {
     ca: process.env.DATABASE_CA,
     key: process.env.DATABASE_KEY,
     cert: process.env.DATABASE_CERT,
+    documentUrl: process.env.DOCUMENT_URL,
+    documentName: process.env.DOCUMENT_NAME,
+    documentUsername: process.env.DOCUMENT_USERNAME,
+    documentPassword: process.env.DOCUMENT_PASSWORD,
   };
 });
