@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Channels } from '../entities/channel.schema';
 import { ChannelRepository } from '../../channel.repository';
-import { channel } from '../../../../domain/channel';
+import { Channel } from '../../../../domain/channel';
 import { ChannelMapper } from '../mappers/channel.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 
@@ -15,15 +15,15 @@ export class ChannelDocumentRepository implements ChannelRepository {
     private readonly channelModel: Model<Channels>,
   ) {}
 
-  async getDeviceChannel(deviceId: number): Promise<NullableType<object>> {
+  async getDeviceChannel(deviceId: number): Promise<NullableType<Channel>> {
     const entityObject = await this.channelModel.findOne({ deviceId });
-    return entityObject ? ChannelMapper.toCleanDomain(entityObject) : null;
+    return entityObject ? ChannelMapper.toDomain(entityObject) : null;
   }
 
   async updateDeviceChannel(
     deviceId: number,
-    payload: Partial<channel>,
-  ): Promise<NullableType<Record<string, any>>> {
+    payload: Partial<Channel>,
+  ): Promise<NullableType<Channel>> {
     const clonedPayload = { ...payload };
     delete clonedPayload.id;
 
@@ -43,10 +43,10 @@ export class ChannelDocumentRepository implements ChannelRepository {
       { new: true },
     );
 
-    return entityObject ? ChannelMapper.toCleanDomain(entityObject) : null;
+    return entityObject ? ChannelMapper.toDomain(entityObject) : null;
   }
 
-  async create(data: channel): Promise<channel> {
+  async create(data: Channel): Promise<Channel> {
     const persistenceModel = ChannelMapper.toPersistence(data);
     const createdEntity = new this.channelModel(persistenceModel);
     const entityObject = await createdEntity.save();
@@ -57,7 +57,7 @@ export class ChannelDocumentRepository implements ChannelRepository {
     paginationOptions,
   }: {
     paginationOptions: IPaginationOptions;
-  }): Promise<channel[]> {
+  }): Promise<Channel[]> {
     const entityObjects = await this.channelModel
       .find()
       .skip((paginationOptions.page - 1) * paginationOptions.limit)
@@ -68,12 +68,12 @@ export class ChannelDocumentRepository implements ChannelRepository {
     );
   }
 
-  async findById(id: channel['id']): Promise<NullableType<channel>> {
+  async findById(id: Channel['id']): Promise<NullableType<Channel>> {
     const entityObject = await this.channelModel.findById(id);
     return entityObject ? ChannelMapper.toDomain(entityObject) : null;
   }
 
-  async findByIds(ids: channel['id'][]): Promise<channel[]> {
+  async findByIds(ids: Channel['id'][]): Promise<Channel[]> {
     const entityObjects = await this.channelModel.find({ _id: { $in: ids } });
     return entityObjects.map((entityObject) =>
       ChannelMapper.toDomain(entityObject),
@@ -81,9 +81,9 @@ export class ChannelDocumentRepository implements ChannelRepository {
   }
 
   async update(
-    id: channel['id'],
-    payload: Partial<channel>,
-  ): Promise<NullableType<channel>> {
+    id: Channel['id'],
+    payload: Partial<Channel>,
+  ): Promise<NullableType<Channel>> {
     const clonedPayload = { ...payload };
     delete clonedPayload.id;
 
@@ -106,7 +106,7 @@ export class ChannelDocumentRepository implements ChannelRepository {
     return entityObject ? ChannelMapper.toDomain(entityObject) : null;
   }
 
-  async remove(id: channel['id']): Promise<void> {
+  async remove(id: Channel['id']): Promise<void> {
     await this.channelModel.deleteOne({ _id: id });
   }
 }

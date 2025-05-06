@@ -30,7 +30,7 @@ export class UpdateDeviceDto extends PartialType(CreateDeviceDto) {}
 
 export class UpdateDevicePinDto {
   @Validate(NoForbiddenChannelKeysConstraint)
-  channels: object;
+  channel: object;
 
   id: number;
 }

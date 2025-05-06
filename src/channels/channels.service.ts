@@ -6,7 +6,7 @@ import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { ChannelRepository } from './infrastructure/persistence/channel.repository';
 import { IPaginationOptions } from '../utils/types/pagination-options';
-import { channel } from './domain/channel';
+import { Channel } from './domain/channel';
 
 @Injectable()
 export class ChannelsService {
@@ -43,16 +43,16 @@ export class ChannelsService {
     });
   }
 
-  findById(id: channel['id']) {
+  findById(id: Channel['id']) {
     return this.channelRepository.findById(id);
   }
 
-  findByIds(ids: channel['id'][]) {
+  findByIds(ids: Channel['id'][]) {
     return this.channelRepository.findByIds(ids);
   }
 
   async update(
-    id: channel['id'],
+    id: Channel['id'],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     updateChannelDto: UpdateChannelDto,
   ) {
@@ -65,7 +65,7 @@ export class ChannelsService {
     });
   }
 
-  remove(id: channel['id']) {
+  remove(id: Channel['id']) {
     return this.channelRepository.remove(id);
   }
 }

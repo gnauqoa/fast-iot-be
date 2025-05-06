@@ -20,7 +20,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { channel } from './domain/channel';
+import { Channel } from './domain/channel';
 import {
   InfinityPaginationResponse,
   InfinityPaginationResponseDto,
@@ -40,7 +40,7 @@ export class ChannelsController {
 
   @Post()
   @ApiCreatedResponse({
-    type: channel,
+    type: Channel,
   })
   create(@Body() createChannelDto: CreateChannelDto) {
     return this.channelsService.create(createChannelDto);
@@ -48,11 +48,11 @@ export class ChannelsController {
 
   @Get()
   @ApiOkResponse({
-    type: InfinityPaginationResponse(channel),
+    type: InfinityPaginationResponse(Channel),
   })
   async findAll(
     @Query() query: FindAllChannelsDto,
-  ): Promise<InfinityPaginationResponseDto<channel>> {
+  ): Promise<InfinityPaginationResponseDto<Channel>> {
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
     if (limit > 50) {
@@ -77,7 +77,7 @@ export class ChannelsController {
     required: true,
   })
   @ApiOkResponse({
-    type: channel,
+    type: Channel,
   })
   findById(@Param('id') id: string) {
     return this.channelsService.findById(id);
@@ -90,7 +90,7 @@ export class ChannelsController {
     required: true,
   })
   @ApiOkResponse({
-    type: channel,
+    type: Channel,
   })
   update(@Param('id') id: string, @Body() updateChannelDto: UpdateChannelDto) {
     return this.channelsService.update(id, updateChannelDto);

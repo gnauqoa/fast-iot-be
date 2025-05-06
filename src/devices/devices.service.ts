@@ -133,20 +133,20 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     const device = await this.findDeviceWithUser(id);
 
     // Transform channel data and update in MongoDB
-    const channelData = payload.channels;
-    const channels = await this.channelRepository.updateDeviceChannel(
+    const channelData = payload.channel;
+    const channel = await this.channelRepository.updateDeviceChannel(
       device.id,
       channelData,
     );
 
-    // Combine device with channels data
+    // Combine device with channel data
     const updatedDevice = {
       ...device,
-      channels,
+      channel,
     };
 
     // Notify via MQTT and WebSockets
-    this.mqttService.publicMessage(`device/${id}`, channels);
+    this.mqttService.publicMessage(`device/${id}`, channel);
     this.notifyClients(id, updatedDevice);
 
     return updatedDevice;
@@ -156,7 +156,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
    * Update device status and information via MQTT
    * @param id - Device ID
    * @param deviceData - Updated device information
-   * @returns Updated device entity with channels
+   * @returns Updated device entity with channel
    */
   async mqttUpdate(id: number, deviceData: UpdateDeviceSensorDto) {
     const queryRunner = this.repo.manager.connection.createQueryRunner();
@@ -204,9 +204,9 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
         },
       });
 
-      // Update channels if provided
-      const channelData = deviceData.channels;
-      const channels = await this.channelRepository.updateDeviceChannel(
+      // Update channel if provided
+      const channelData = deviceData.channel;
+      const channel = await this.channelRepository.updateDeviceChannel(
         id,
         channelData,
       );
@@ -215,10 +215,10 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
 
       info(`Device updated: ${JSON.stringify(updatedDevice)}`);
 
-      // Combine device with channels and notify clients
+      // Combine device with channel and notify clients
       const deviceWithChannels = {
         ...updatedDevice,
-        channels,
+        channel,
       };
 
       this.notifyClients(id, deviceWithChannels);
