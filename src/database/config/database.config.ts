@@ -86,6 +86,10 @@ class EnvironmentVariablesValidator {
   @IsString()
   @IsOptional()
   DOCUMENT_PASSWORD: string;
+
+  @IsString()
+  @IsOptional()
+  WORKER_HOST: string;
 }
 
 export default registerAs<DatabaseConfig>('database', () => {
@@ -115,5 +119,6 @@ export default registerAs<DatabaseConfig>('database', () => {
     documentName: process.env.DOCUMENT_NAME,
     documentUsername: process.env.DOCUMENT_USERNAME,
     documentPassword: process.env.DOCUMENT_PASSWORD,
+    workerHost: process.env.WORKER_HOST,
   };
 });

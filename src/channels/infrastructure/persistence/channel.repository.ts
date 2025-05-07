@@ -2,15 +2,17 @@ import { DeepPartial } from '../../../utils/types/deep-partial.type';
 import { NullableType } from '../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
 import { Channel } from '../../domain/channel';
+import { ChannelValueType } from './document/entities/channel.schema';
 
 export abstract class ChannelRepository {
-  abstract getDeviceChannel(deviceId: number): Promise<NullableType<Channel>>;
+  abstract getDeviceChannel(deviceId: number): Promise<Channel[]>;
   abstract updateDeviceChannel(
     deviceId: number,
-    payload: DeepPartial<Channel>,
-  ): Promise<NullableType<Channel>>;
+    name: string,
+    value: ChannelValueType,
+  ): Promise<Channel>;
   abstract create(
-    data: Omit<Channel, 'id' | 'createdAt' | 'updatedAt'>,
+    data: Omit<Channel, 'id' | 'createdAt' | 'updatedAt' | 'name' | 'value'>,
   ): Promise<Channel>;
 
   abstract findAllWithPagination({

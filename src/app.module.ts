@@ -24,6 +24,8 @@ import { CheckDeviceService } from './cron/check-device.service';
 import { TemplatesModule } from './templates/templates.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MongooseConfigService } from './database/mongoose-config.service';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-ioredis-yet';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -42,6 +44,23 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
       envFilePath: ['.env'],
     }),
     infrastructureDatabaseModule,
+    CacheModule.registerAsync({
+      isGlobal: true,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const redisUrl = configService.getOrThrow<string>(
+          'database.workerHost',
+          {
+            infer: true,
+          },
+        );
+        return {
+          store: redisStore(),
+          url: redisUrl,
+          ttl: 60, // default TTL in seconds
+        };
+      },
+    }),
     MongooseModule.forRootAsync({
       useClass: MongooseConfigService,
     }),

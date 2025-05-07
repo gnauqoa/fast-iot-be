@@ -19,6 +19,7 @@ export class CreateDevice1743498401382 implements MigrationInterface {
             "deviceToken" character varying NOT NULL,
             "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            "deletedAt" TIMESTAMP,
             CONSTRAINT "FK_device_user" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE
         );
 

@@ -1,13 +1,15 @@
 import {
+  BadRequestException,
   forwardRef,
   Inject,
   Injectable,
-  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
 import { info } from 'ps-logger';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 // Domain imports
 import { DeviceStatus, DeviceStatusStr } from './domain/device-status.enum';
@@ -30,6 +32,8 @@ import { ScanDevicesDto } from './dto/scan-devices.dto';
 import { createPaginatedResult } from '../utils/pagination';
 import { createPointExpression } from '../utils/position';
 import { METERS_PER_DEGREE } from '../../test/utils/constants';
+import { Channel } from '../channels/domain/channel';
+import { ChannelValueType } from '../channels/infrastructure/persistence/document/entities/channel.schema';
 
 /**
  * Service for handling device operations including geographic scanning,
@@ -39,6 +43,8 @@ import { METERS_PER_DEGREE } from '../../test/utils/constants';
  */
 @Injectable()
 export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
+  private readonly CACHE_KEY_PREFIX = 'device';
+
   constructor(
     @InjectRepository(DeviceEntity) repo: Repository<DeviceEntity>,
     @Inject(forwardRef(() => MqttService))
@@ -46,6 +52,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     @Inject(forwardRef(() => SocketIoGateway))
     private readonly socketIoGateway: SocketIoGateway,
     private readonly channelRepository: ChannelRepository,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     super(repo);
   }
@@ -67,7 +74,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     const radiusInDegrees = radius / METERS_PER_DEGREE;
     const point = createPointExpression(longitude, latitude);
 
-    // Build the base query that will be reused
+    // Build the query with all conditions
     const baseQuery = this.repo
       .createQueryBuilder('device')
       .where(`ST_DWithin(device.position, ${point}, :radius)`, {
@@ -78,36 +85,17 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
         status: status ? DeviceStatus[status] : DeviceStatus.OFFLINE,
       });
 
-    // Get total count
-    const total = await baseQuery.clone().getCount();
+    // Get total count and paginated results
+    const [total, devices] = await Promise.all([
+      baseQuery.clone().getCount(),
+      baseQuery
+        .leftJoinAndSelect('device.user', 'user')
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getMany(),
+    ]);
 
-    // Get paginated results with relations
-    const devices = await baseQuery
-      .leftJoinAndSelect('device.user', 'user')
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getMany();
-
-    // Return paginated results
     return createPaginatedResult(devices, total, page, limit);
-  }
-
-  /**
-   * Find a device by ID with user relation
-   * @param id - Device ID
-   * @returns Device entity with relations or throws NotFoundException
-   */
-  private async findDeviceWithUser(id: number): Promise<DeviceEntity> {
-    const device = await this.repo.findOne({
-      where: { id },
-      relations: ['user'],
-    });
-
-    if (!device) {
-      throw new NotFoundException(`Device with ID ${id} not found`);
-    }
-
-    return device;
   }
 
   /**
@@ -124,39 +112,74 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
   }
 
   /**
+   * Gets device channels from cache or repository
+   * @param id - Device ID
+   * @returns Array of device channels
+   */
+  async getDeviceChannelsFromCache(id: number): Promise<Channel[]> {
+    const cacheKey = `${this.CACHE_KEY_PREFIX}:${id}:channels`;
+    let channels: Channel[] | null = await this.cacheManager.get(cacheKey);
+
+    if (!channels) {
+      channels = (await this.channelRepository.getDeviceChannel(id)) || [];
+      await this.cacheManager.set(cacheKey, channels);
+    }
+
+    return channels;
+  }
+
+  /**
+   * Updates channel cache with new channel values
+   * @param id - Device ID
+   * @param channelName - Name of the channel to update
+   * @param channelValue - New value for the channel
+   * @returns Updated array of channels
+   */
+  private async updateChannelCache(
+    id: number,
+    channelName: string,
+    channelValue: ChannelValueType,
+  ): Promise<Channel[]> {
+    const cacheKey = `${this.CACHE_KEY_PREFIX}:${id}:channels`;
+    const channels = await this.getDeviceChannelsFromCache(id);
+
+    const updatedChannels = channels.map((c) =>
+      c.name === channelName ? { ...c, value: channelValue } : c,
+    );
+
+    await this.cacheManager.set(cacheKey, updatedChannels);
+    return updatedChannels;
+  }
+
+  /**
    * Update device channels via socket connection
    * @param id - Device ID
    * @param payload - Channel update information
-   * @returns Updated device with channel information
+   * @returns Updated device channel information
    */
   async socketUpdate(id: number, payload: UpdateDevicePinDto) {
-    const device = await this.findDeviceWithUser(id);
+    if (!payload.channelName || !payload.channelValue) {
+      throw new BadRequestException(
+        'Channel name and value are required for update',
+      );
+    }
 
-    // Transform channel data and update in MongoDB
-    const channelData = payload.channel;
+    // Update channel in repository
     const channel = await this.channelRepository.updateDeviceChannel(
-      device.id,
-      channelData,
+      id,
+      payload.channelName,
+      payload.channelValue,
     );
 
-    // Combine device with channel data
-    const updatedDevice = {
-      ...device,
-      channel,
-    };
-
-    // Notify via MQTT and WebSockets
-    this.mqttService.publicMessage(`device/${id}`, channel);
-    this.notifyClients(id, updatedDevice);
-
-    return updatedDevice;
+    // Update cache and return updated channels
+    return this.updateChannelCache(id, channel.name, channel.value);
   }
 
   /**
    * Update device status and information via MQTT
    * @param id - Device ID
    * @param deviceData - Updated device information
-   * @returns Updated device entity with channel
+   * @returns Updated device entity with channels
    */
   async mqttUpdate(id: number, deviceData: UpdateDeviceSensorDto) {
     const queryRunner = this.repo.manager.connection.createQueryRunner();
@@ -165,33 +188,32 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     await queryRunner.startTransaction();
 
     try {
-      // Create base update query
-      const baseQuery = queryRunner.manager
-        .createQueryBuilder()
-        .update(DeviceEntity)
-        .where('id = :id', { id });
-
       // Prepare update data
       const updateData: Partial<DeviceEntity> = {
         status: DeviceStatusStr.ONLINE,
         lastUpdate: new Date(),
       };
 
+      // Create update query
+      const updateQuery = queryRunner.manager
+        .createQueryBuilder()
+        .update(DeviceEntity)
+        .where('id = :id', { id });
+
       // Add position update if coordinates are provided
       if (deviceData.latitude && deviceData.longitude) {
         const longitude = parseFloat(deviceData.longitude);
         const latitude = parseFloat(deviceData.latitude);
-
-        baseQuery.set({
+        updateQuery.set({
           ...updateData,
           position: () => createPointExpression(longitude, latitude),
         });
       } else {
-        baseQuery.set(updateData);
+        updateQuery.set(updateData);
       }
 
       // Execute update
-      await baseQuery.execute();
+      await updateQuery.execute();
 
       // Retrieve updated device with relations
       const updatedDevice = await queryRunner.manager.findOne(DeviceEntity, {
@@ -204,26 +226,33 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
         },
       });
 
-      // Update channel if provided
-      const channelData = deviceData.channel;
-      const channel = await this.channelRepository.updateDeviceChannel(
-        id,
-        channelData,
-      );
+      // Update channel if name and value are provided
+      if (
+        updatedDevice &&
+        deviceData.channelName &&
+        deviceData.channelValue !== undefined
+      ) {
+        await this.channelRepository.updateDeviceChannel(
+          id,
+          deviceData.channelName,
+          deviceData.channelValue,
+        );
+
+        // Update cache and assign updated channels to device
+        updatedDevice.channels = await this.updateChannelCache(
+          id,
+          deviceData.channelName,
+          deviceData.channelValue,
+        );
+      }
 
       await queryRunner.commitTransaction();
-
       info(`Device updated: ${JSON.stringify(updatedDevice)}`);
 
-      // Combine device with channel and notify clients
-      const deviceWithChannels = {
-        ...updatedDevice,
-        channel,
-      };
+      // Notify clients about the update
+      this.notifyClients(id, updatedDevice);
 
-      this.notifyClients(id, deviceWithChannels);
-
-      return deviceWithChannels;
+      return updatedDevice;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;

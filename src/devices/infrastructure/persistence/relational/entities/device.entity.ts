@@ -61,7 +61,7 @@ export class DeviceEntity extends EntityRelationalHelper {
   @Exclude()
   role: number;
 
-  channel?: Channel;
+  channels?: Channel[];
 
   @Column({ type: 'varchar', unique: true })
   @Exclude()

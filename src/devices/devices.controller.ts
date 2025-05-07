@@ -108,10 +108,12 @@ export class DevicesController implements CrudController<DeviceEntity> {
   @Override('getOneBase')
   @UseGuards(DeviceOwnershipGuard)
   async ovGetOneBase(@Request() request: any): Promise<DeviceEntity> {
-    const channel = await this.channelService.getDeviceChannel(
-      request.device.id,
-    );
-    return { ...request.device, channel };
+    return {
+      ...request.device,
+      channels: await this.service.getDeviceChannelsFromCache(
+        request.device.id,
+      ),
+    };
   }
 
   @Override('updateOneBase')
@@ -149,12 +151,6 @@ export class DevicesController implements CrudController<DeviceEntity> {
     const device = await this.service.createOne(req, {
       ...dto,
     });
-
-    const channel = await this.channelService.create({
-      deviceId: device.id,
-    });
-
-    device.channel = channel;
 
     return device;
   }

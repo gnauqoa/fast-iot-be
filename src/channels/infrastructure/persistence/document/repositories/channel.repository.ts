@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Channels } from '../entities/channel.schema';
+import { Channels, ChannelValueType } from '../entities/channel.schema';
 import { ChannelRepository } from '../../channel.repository';
 import { Channel } from '../../../../domain/channel';
 import { ChannelMapper } from '../mappers/channel.mapper';
@@ -15,35 +15,29 @@ export class ChannelDocumentRepository implements ChannelRepository {
     private readonly channelModel: Model<Channels>,
   ) {}
 
-  async getDeviceChannel(deviceId: number): Promise<NullableType<Channel>> {
-    const entityObject = await this.channelModel.findOne({ deviceId });
-    return entityObject ? ChannelMapper.toDomain(entityObject) : null;
+  async getDeviceChannel(deviceId: number): Promise<Channel[]> {
+    const entityObject = await this.channelModel.find({ deviceId });
+    if (!entityObject) {
+      return [];
+    }
+    return entityObject.map((entity) => ChannelMapper.toDomain(entity));
   }
 
   async updateDeviceChannel(
     deviceId: number,
-    payload: Partial<Channel>,
-  ): Promise<NullableType<Channel>> {
-    const clonedPayload = { ...payload };
-    delete clonedPayload.id;
-
-    const filter = { deviceId: deviceId };
-    const entity = await this.channelModel.findOne(filter);
-
-    if (!entity) {
-      throw new NotFoundException('Record not found');
-    }
-
+    name: string,
+    value: ChannelValueType,
+  ): Promise<Channel> {
     const entityObject = await this.channelModel.findOneAndUpdate(
-      filter,
-      ChannelMapper.toPersistence({
-        ...ChannelMapper.toDomain(entity),
-        ...clonedPayload,
-      }),
+      { deviceId, name },
+      { value },
       { new: true },
     );
 
-    return entityObject ? ChannelMapper.toDomain(entityObject) : null;
+    if (!entityObject) {
+      throw new NotFoundException('Channel not found');
+    }
+    return ChannelMapper.toDomain(entityObject);
   }
 
   async create(data: Channel): Promise<Channel> {
