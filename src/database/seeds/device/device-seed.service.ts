@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeviceEntity } from '../../../../devices/infrastructure/persistence/relational/entities/device.entity';
+import { DeviceEntity } from '../../../devices/infrastructure/persistence/relational/entities/device.entity';
 import { Repository } from 'typeorm';
 import { faker } from '@faker-js/faker';
-import { UserEntity } from '../../../../users/infrastructure/persistence/relational/entities/user.entity';
+import { UserEntity } from '../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
-import { DeviceRole } from '../../../../devices/domain/device-role.enum';
+import { DeviceRole } from '../../../devices/domain/device-role.enum';
 import * as crypto from 'crypto';
-import { TemplateEntity } from '../../../../templates/infrastructure/persistence/relational/entities/template.entity';
-import { METERS_PER_DEGREE } from '../../../../../test/utils/constants';
+import { METERS_PER_DEGREE } from '../../../../test/utils/constants';
+import { InjectModel } from '@nestjs/mongoose';
+import { Templates } from '../../../templates/infrastructure/persistence/document/entities/template.schema';
+import { ChannelsService } from '../../../channels/channels.service';
+import { TemplateRepository } from '../../../templates/infrastructure/persistence/template.repository';
+import { getChannelDefaultValue } from '../../../utils/channel';
 
 @Injectable()
 export class DeviceSeedService {
@@ -17,9 +21,10 @@ export class DeviceSeedService {
     private repository: Repository<DeviceEntity>,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
+    @InjectModel(Templates.name)
+    private readonly channelService: ChannelsService,
+    private readonly templateRepository: TemplateRepository,
     private readonly configService: ConfigService,
-    @InjectRepository(TemplateEntity)
-    private templateRepository: Repository<TemplateEntity>,
   ) {}
 
   async run() {
@@ -51,7 +56,7 @@ export class DeviceSeedService {
     const users = await this.userRepository.find({});
     const userIds = users.map((user) => user.id);
 
-    const templates = await this.templateRepository.find({});
+    const templates = await this.templateRepository.find();
     const templateIds = templates.map((template) => template.id);
 
     const devices = Array.from({ length: 30 }, () => {
@@ -83,6 +88,18 @@ export class DeviceSeedService {
         })
         .where('id = :id', { id: device.id })
         .execute();
+
+      const template = templates.find(
+        (template) => template.id === device.templateId,
+      );
+
+      for (const channel of template?.channels || []) {
+        await this.channelService.create({
+          deviceId: device.id,
+          name: channel.name,
+          value: getChannelDefaultValue(channel.type),
+        });
+      }
     }
   }
 }

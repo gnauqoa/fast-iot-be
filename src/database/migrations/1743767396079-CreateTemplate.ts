@@ -59,7 +59,7 @@ export class CreateTemplate1743767396079 implements MigrationInterface {
     await queryRunner.addColumns('device', [
       new TableColumn({
         name: 'templateId',
-        type: 'int',
+        type: 'varchar',
         isNullable: true, // Change to false if it should be required
       }),
     ]);

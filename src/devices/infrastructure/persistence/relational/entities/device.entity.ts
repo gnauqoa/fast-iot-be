@@ -20,8 +20,8 @@ import {
   DeviceStatusStr,
 } from '../../../../domain/device-status.enum';
 import { DeviceRole, DeviceRoleMap } from '../../../../domain/device-role.enum';
-import { TemplateEntity } from '../../../../../templates/infrastructure/persistence/relational/entities/template.entity';
 import { Channel } from '../../../../../channels/domain/channel';
+import { Template } from '../../../../../templates/domain/template';
 
 @Entity({
   name: 'device',
@@ -71,11 +71,10 @@ export class DeviceEntity extends EntityRelationalHelper {
   @Exclude()
   deviceToken: string;
 
-  @ManyToOne(() => TemplateEntity)
-  template: TemplateEntity;
+  template?: Template;
 
-  @Column({ type: 'int', nullable: true })
-  templateId: number;
+  @Column({ type: 'varchar', nullable: true })
+  templateId: string;
 
   @CreateDateColumn()
   createdAt: Date;

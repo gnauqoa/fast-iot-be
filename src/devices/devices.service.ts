@@ -63,7 +63,9 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
    * @param id - Device ID
    * @returns Device entity with channels
    */
-  private async getDeviceDataFromCache(id: number): Promise<DeviceEntity | null> {
+  private async getDeviceDataFromCache(
+    id: number,
+  ): Promise<DeviceEntity | null> {
     const cacheKey = `${this.CACHE_KEY_PREFIX}:${id}`;
     let deviceData: DeviceEntity | null = await this.cacheManager.get(cacheKey);
 
@@ -79,7 +81,8 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       });
 
       if (deviceData) {
-        deviceData.channels = await this.channelRepository.getDeviceChannel(id) || [];
+        deviceData.channels =
+          (await this.channelRepository.getDeviceChannel(id)) || [];
         await this.cacheManager.set(cacheKey, deviceData, this.CACHE_TTL);
       }
     }
@@ -312,7 +315,8 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
           );
 
           // Get current channels and update the specific channel
-          const channels = await this.channelRepository.getDeviceChannel(id) || [];
+          const channels =
+            (await this.channelRepository.getDeviceChannel(id)) || [];
           updatedDevice.channels = channels;
         }
 

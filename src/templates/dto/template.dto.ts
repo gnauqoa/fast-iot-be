@@ -1,10 +1,10 @@
-// Don't forget to use the class-validator decorators in the DTO properties.
-// import { Allow } from 'class-validator';
-
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsDate,
+  IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
@@ -15,17 +15,24 @@ import {
   PrototypeDefinition,
 } from '../domain/template';
 
-export class UpdateTemplateDto {
+export class TemplateDto {
+  @ApiProperty({
+    type: String,
+    description: 'Unique identifier of the template',
+  })
+  @IsString()
+  @IsNotEmpty()
+  id: string;
+
   @ApiProperty({
     type: String,
     description: 'Name of the template',
     minLength: 3,
     maxLength: 100,
-    required: false,
   })
   @IsString()
-  @IsOptional()
-  name?: string;
+  @IsNotEmpty()
+  name: string;
 
   @ApiProperty({
     type: String,
@@ -39,14 +46,21 @@ export class UpdateTemplateDto {
   description?: string;
 
   @ApiProperty({
+    type: Number,
+    description: 'ID of the user who created the template',
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  userId?: number;
+
+  @ApiProperty({
     type: [Object],
     description: 'List of channels defined in the template',
-    required: false,
   })
   @ValidateNested({ each: true })
   @Type(() => Object)
-  @IsOptional()
-  channels?: IChannelDefinition[];
+  channels: IChannelDefinition[];
 
   @ApiProperty({
     type: Object,
@@ -71,9 +85,31 @@ export class UpdateTemplateDto {
   @ApiProperty({
     type: Boolean,
     description: 'Whether the template is public',
-    required: false,
+    default: false,
   })
   @IsBoolean()
+  public: boolean;
+
+  @ApiProperty({
+    type: Date,
+    description: 'Creation timestamp',
+  })
+  @IsDate()
+  createdAt: Date;
+
+  @ApiProperty({
+    type: Date,
+    description: 'Last update timestamp',
+  })
+  @IsDate()
+  updatedAt: Date;
+
+  @ApiProperty({
+    type: Date,
+    description: 'Deletion timestamp',
+    required: false,
+  })
+  @IsDate()
   @IsOptional()
-  public?: boolean;
+  deletedAt?: Date;
 }

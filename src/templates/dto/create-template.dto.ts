@@ -1,24 +1,34 @@
-import {
-  IsString,
-  IsInt,
-  IsBoolean,
-  IsOptional,
-  IsNotEmpty,
-} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import {
+  IChannelDefinition,
+  IPrototype,
+  PrototypeDefinition,
+} from '../domain/template';
 
 export class CreateTemplateDto {
   @ApiProperty({
-    description: 'The name of the template',
-    example: 'My Template',
+    type: String,
+    description: 'Name of the template',
+    minLength: 3,
+    maxLength: 100,
   })
   @IsString()
   @IsNotEmpty()
   name: string;
 
   @ApiProperty({
-    description: 'A description of the template',
-    example: 'This is a sample template',
+    type: String,
+    description: 'Description of the template',
+    minLength: 10,
+    maxLength: 500,
     required: false,
   })
   @IsString()
@@ -26,26 +36,37 @@ export class CreateTemplateDto {
   description?: string;
 
   @ApiProperty({
-    description: 'The ID of the user who owns the template',
-    example: 1,
+    type: [Object],
+    description: 'List of channels defined in the template',
   })
-  @IsInt()
-  @IsNotEmpty()
-  userId: number;
+  @ValidateNested({ each: true })
+  @Type(() => Object)
+  channels: IChannelDefinition[];
 
   @ApiProperty({
-    description: 'The prototype data for the template (JSON object)',
-    example: { key: 'value' },
+    type: Object,
+    description: 'Desktop prototype configuration',
     required: false,
   })
+  @ValidateNested()
+  @Type(() => PrototypeDefinition)
   @IsOptional()
-  prototype?: any; // Adjust type if a specific interface is defined
+  desktopPrototype?: IPrototype;
 
   @ApiProperty({
-    description: 'Whether the template is public',
-    example: false,
-    default: false,
+    type: Object,
+    description: 'Mobile prototype configuration',
     required: false,
+  })
+  @ValidateNested()
+  @Type(() => PrototypeDefinition)
+  @IsOptional()
+  mobilePrototype?: IPrototype;
+
+  @ApiProperty({
+    type: Boolean,
+    description: 'Whether the template is public',
+    default: false,
   })
   @IsBoolean()
   @IsOptional()

@@ -1,107 +1,112 @@
-import { Controller, Request, UseGuards } from '@nestjs/common';
-import { TemplatesService } from './templates.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import { TemplateEntity } from './infrastructure/persistence/relational/entities/template.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import {
-  Crud,
-  CrudRequest,
-  Override,
-  ParsedBody,
-  ParsedRequest,
-} from '@dataui/crud';
-import { CrudController } from '@dataui/crud';
-import { RolesGuard } from '../roles/roles.guard';
-import { TemplateOwnershipGuard } from './template-ownership.guard';
-import { RoleEnum } from '../roles/roles.enum';
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+  Request,
+} from '@nestjs/common';
+import { TemplatesService } from './templates.service';
+import { CreateTemplateDto } from './dto/create-template.dto';
 import { UpdateTemplateDto } from './dto/update-template.dto';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import { Template } from './domain/template';
+import { AuthGuard } from '@nestjs/passport';
+import {
+  InfinityPaginationResponse,
+  InfinityPaginationResponseDto,
+} from '../utils/dto/infinity-pagination-response.dto';
+import { FindAllTemplatesDto } from './dto/find-all-templates.dto';
+import { infinityPagination } from '../utils/pagination';
 
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'), RolesGuard)
-@Crud({
-  model: { type: TemplateEntity },
-  query: {
-    alwaysPaginate: true,
-    maxLimit: 100,
-    limit: 10,
-    cache: 0,
-    softDelete: true,
-    join: {},
-    sort: [{ field: 'createdAt', order: 'DESC' }],
-  },
-  routes: {
-    exclude: ['replaceOneBase', 'recoverOneBase'],
-  },
-})
 @ApiTags('Templates')
+@ApiBearerAuth()
+@UseGuards(AuthGuard('jwt'))
 @Controller({
   path: 'templates',
   version: '1',
 })
-export class TemplatesController implements CrudController<TemplateEntity> {
-  constructor(
-    public service: TemplatesService,
-    @InjectRepository(TemplateEntity) public repo: Repository<TemplateEntity>,
-  ) {}
+export class TemplatesController {
+  constructor(private readonly templatesService: TemplatesService) {}
 
-  get base(): CrudController<TemplateEntity> {
-    return this;
+  @Post()
+  @ApiCreatedResponse({
+    type: Template,
+  })
+  create(@Body() createTemplateDto: CreateTemplateDto, @Request() req) {
+    return this.templatesService.create(createTemplateDto, req.user.id);
   }
 
-  @Override('getManyBase')
-  async ovGetManyBase(
-    @ParsedRequest() req: CrudRequest,
-    @Request() request: any,
-  ): Promise<any> {
-    const user = request.user;
-    const userId: number = user.id;
-    const userRoleId: number = user.role.id;
+  @Get()
+  @ApiOkResponse({
+    type: InfinityPaginationResponse(Template),
+  })
+  async findAll(
+    @Query() query: FindAllTemplatesDto,
+    @Request() req,
+  ): Promise<InfinityPaginationResponseDto<Template>> {
+    const page = query?.page ?? 1;
+    let limit = query?.limit ?? 10;
+    if (limit > 50) {
+      limit = 50;
+    }
 
-    return await this.service.getMany({
-      ...req,
-      parsed: {
-        ...req.parsed,
-        search: {
-          $or: [
-            {
-              $and: [
-                ...(req.parsed.search?.$and || []),
-                userRoleId !== RoleEnum.admin
-                  ? { userId: { $eq: userId } }
-                  : {},
-              ],
-            },
-            userRoleId !== RoleEnum.admin ? { public: { $eq: true } } : {},
-          ],
-        },
-      },
-    });
+    return infinityPagination(
+      await this.templatesService.findAll(
+        { ...query, page, limit },
+        req.user.id,
+      ),
+      { page, limit },
+    );
   }
 
-  @Override('getOneBase')
-  @UseGuards(TemplateOwnershipGuard)
-  ovGetOneBase(@Request() request: any): Promise<TemplateEntity> {
-    return request.template;
+  @Get(':id')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  @ApiOkResponse({
+    type: Template,
+  })
+  findById(@Param('id') id: string, @Request() req) {
+    return this.templatesService.findById(id, req.user.id);
   }
 
-  @Override('updateOneBase')
-  @UseGuards(TemplateOwnershipGuard)
-  async ovUpdateOneBase(
-    @ParsedRequest() req: CrudRequest,
-    @ParsedBody() dto: UpdateTemplateDto,
-  ): Promise<TemplateEntity> {
-    return await this.service.updateOne(req, {
-      ...dto,
-    });
+  @Patch(':id')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  @ApiOkResponse({
+    type: Template,
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updateTemplateDto: UpdateTemplateDto,
+    @Request() req,
+  ) {
+    return this.templatesService.update(id, updateTemplateDto, req.user.id);
   }
 
-  @Override('deleteOneBase')
-  @UseGuards(TemplateOwnershipGuard)
-  async ovDeleteOneBase(
-    @ParsedRequest() req: CrudRequest,
-  ): Promise<void | TemplateEntity> {
-    return await this.service.deleteOne(req);
+  @Delete(':id')
+  @ApiParam({
+    name: 'id',
+    type: String,
+    required: true,
+  })
+  remove(@Param('id') id: string, @Request() req) {
+    return this.templatesService.remove(id, req.user.id);
   }
 }

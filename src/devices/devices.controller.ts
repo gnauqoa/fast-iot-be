@@ -26,6 +26,8 @@ import { ScanDevicesDto } from './dto/scan-devices.dto';
 import { DeviceStatusStr } from './domain/device-status.enum';
 import bcrypt from 'bcryptjs';
 import { ChannelsService } from '../channels/channels.service';
+import { TemplateRepository } from '../templates/infrastructure/persistence/template.repository';
+import { getChannelDefaultValue } from '../utils/channel';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -59,6 +61,7 @@ export class DevicesController implements CrudController<DeviceEntity> {
     public service: DevicesService,
     @InjectRepository(DeviceEntity) public repo: Repository<DeviceEntity>,
     private readonly channelService: ChannelsService,
+    private readonly templateRepository: TemplateRepository,
   ) {}
 
   get base(): CrudController<DeviceEntity> {
@@ -151,6 +154,16 @@ export class DevicesController implements CrudController<DeviceEntity> {
     const device = await this.service.createOne(req, {
       ...dto,
     });
+
+    const template = await this.templateRepository.findById(device.templateId);
+
+    for (const channel of template?.channels || []) {
+      await this.channelService.create({
+        deviceId: device.id,
+        name: channel.name,
+        value: getChannelDefaultValue(channel.type),
+      });
+    }
 
     return device;
   }

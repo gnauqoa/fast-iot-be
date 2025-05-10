@@ -1,16 +1,15 @@
-import {
-  // common
-  Module,
-} from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TemplatesService } from './templates.service';
 import { TemplatesController } from './templates.controller';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { TemplateEntity } from './infrastructure/persistence/relational/entities/template.entity';
+import { DocumentTemplatePersistenceModule } from './infrastructure/persistence/document/document-persistence.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TemplateEntity])],
+  imports: [
+    // import modules, etc.
+    DocumentTemplatePersistenceModule,
+  ],
   controllers: [TemplatesController],
   providers: [TemplatesService],
-  exports: [TemplatesService],
+  exports: [TemplatesService, DocumentTemplatePersistenceModule],
 })
 export class TemplatesModule {}

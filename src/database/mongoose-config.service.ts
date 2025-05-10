@@ -12,6 +12,22 @@ export class MongooseConfigService implements MongooseOptionsFactory {
   constructor(private configService: ConfigService<AllConfigType>) {}
 
   createMongooseOptions(): MongooseModuleOptions {
+    console.log({
+      asd123123123assad: this.configService.get('database.documentUrl', {
+        infer: true,
+      }),
+      dbName: this.configService.get('database.documentName', { infer: true }),
+      user: this.configService.get('database.documentUsername', {
+        infer: true,
+      }),
+      pass: this.configService.get('database.documentPassword', {
+        infer: true,
+      }),
+      connectionFactory(connection) {
+        connection.plugin(mongooseAutoPopulate);
+        return connection;
+      },
+    });
     return {
       uri: this.configService.get('database.documentUrl', { infer: true }),
       dbName: this.configService.get('database.documentName', { infer: true }),

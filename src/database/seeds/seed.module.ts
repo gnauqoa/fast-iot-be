@@ -3,22 +3,25 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { TypeOrmConfigService } from '../../typeorm-config.service';
+import { TypeOrmConfigService } from '../typeorm-config.service';
 import { RoleSeedModule } from './role/role-seed.module';
 import { StatusSeedModule } from './status/status-seed.module';
 import { UserSeedModule } from './user/user-seed.module';
-import databaseConfig from '../../config/database.config';
-import appConfig from '../../../config/app.config';
+import databaseConfig from '../config/database.config';
+import appConfig from '../../config/app.config';
 import { DeviceSeedModule } from './device/device-seed.module';
 import { TemplateSeedModule } from './template/template-seed.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { MongooseConfigService } from '../mongoose-config.service';
 
 @Module({
   imports: [
-    TemplateSeedModule,
     DeviceSeedModule,
     RoleSeedModule,
     StatusSeedModule,
+    TemplateSeedModule,
     UserSeedModule,
+
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig, appConfig],
@@ -29,6 +32,9 @@ import { TemplateSeedModule } from './template/template-seed.module';
       dataSourceFactory: async (options: DataSourceOptions) => {
         return new DataSource(options).initialize();
       },
+    }),
+    MongooseModule.forRootAsync({
+      useClass: MongooseConfigService,
     }),
   ],
 })
