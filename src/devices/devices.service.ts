@@ -188,23 +188,26 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       );
     }
 
-    // Update channel in repository
-    const channel = await this.channelRepository.updateDeviceChannel(
-      id,
-      payload.channelName,
-      payload.channelValue,
-    );
-
     // Get current device data
     const deviceData = await this.getDeviceDataFromCache(id);
+
     if (!deviceData) {
       throw new BadRequestException('Device not found');
     }
 
-    // Update channels in device data
-    const updatedChannels = (deviceData.channels || []).map((c) =>
-      c.name === channel.name ? { ...c, value: channel.value } : c,
+    // Update channel in repository
+    const channel = await this.channelRepository.updateDeviceChannel(
+      id,
+      deviceData.templateId,
+      payload.channelName,
+      payload.channelValue,
     );
+    // Update channels in device data
+    const updatedChannels = deviceData.channels?.find(
+      (c) => c.name === channel.name,
+    )
+      ? deviceData.channels.map((c) => (c.name === channel.name ? channel : c))
+      : [...(deviceData?.channels || []), channel];
 
     // Update cache with new channel data
     await this.updateDeviceCache(id, { channels: updatedChannels });
@@ -274,6 +277,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
         if (deviceData.channelName && deviceData.channelValue !== undefined) {
           await this.channelRepository.updateDeviceChannel(
             id,
+            updatedDevice.templateId,
             deviceData.channelName,
             deviceData.channelValue,
           );

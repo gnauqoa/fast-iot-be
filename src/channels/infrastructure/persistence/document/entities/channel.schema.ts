@@ -33,4 +33,5 @@ export class Channels extends EntityDocumentHelper {
 
 export const ChannelSchema = SchemaFactory.createForClass(Channels);
 
+ChannelSchema.index({ deviceId: 1, name: 1 }, { unique: true });
 ChannelSchema.index({ deviceId: 1, name: 1, value: 1 });

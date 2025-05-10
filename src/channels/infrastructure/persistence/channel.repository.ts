@@ -8,6 +8,7 @@ export abstract class ChannelRepository {
   abstract getDeviceChannel(deviceId: number): Promise<Channel[]>;
   abstract updateDeviceChannel(
     deviceId: number,
+    templateId: string,
     name: string,
     value: ChannelValueType,
   ): Promise<Channel>;

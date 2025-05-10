@@ -7,12 +7,14 @@ import { ChannelRepository } from '../../channel.repository';
 import { Channel } from '../../../../domain/channel';
 import { ChannelMapper } from '../mappers/channel.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
+import { TemplatesService } from '../../../../../templates/templates.service';
 
 @Injectable()
 export class ChannelDocumentRepository implements ChannelRepository {
   constructor(
     @InjectModel(Channels.name)
     private readonly channelModel: Model<Channels>,
+    private readonly templateService: TemplatesService,
   ) {}
 
   async getDeviceChannel(deviceId: number): Promise<Channel[]> {
@@ -25,6 +27,7 @@ export class ChannelDocumentRepository implements ChannelRepository {
 
   async updateDeviceChannel(
     deviceId: number,
+    templateId: string,
     name: string,
     value: ChannelValueType,
   ): Promise<Channel> {
@@ -35,7 +38,22 @@ export class ChannelDocumentRepository implements ChannelRepository {
     );
 
     if (!entityObject) {
-      throw new NotFoundException('Channel not found');
+      const template = await this.templateService.findById(templateId);
+
+      if (
+        !template ||
+        !template.channels.find((channel) => channel.name === name)
+      ) {
+        throw new NotFoundException('Channel not found');
+      }
+
+      const channel = await this.channelModel.create({
+        deviceId,
+        name,
+        value,
+      });
+
+      return ChannelMapper.toDomain(channel);
     }
     return ChannelMapper.toDomain(entityObject);
   }

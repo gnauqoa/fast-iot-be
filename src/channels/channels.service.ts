@@ -21,8 +21,6 @@ export class ChannelsService {
 
   async create(createChannelDto: CreateChannelDto) {
     return this.channelRepository.create({
-      // Do not remove comment below.
-      // <creating-property-payload />
       ...createChannelDto,
     });
   }

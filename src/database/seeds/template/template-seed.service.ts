@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { faker } from '@faker-js/faker';
 import { Templates } from '../../../templates/infrastructure/persistence/document/entities/template.schema';
-import { ChannelType } from '../../../templates/domain/enums/channel-type.enum';
 import { UserEntity } from '../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,37 +16,7 @@ export class TemplateSeedService {
     private userRepository: Repository<UserEntity>,
   ) {}
 
-  private generateChannel() {
-    const type = faker.helpers.arrayElement(Object.values(ChannelType));
-    return {
-      name: faker.helpers.arrayElement([
-        'Temperature',
-        'Humidity',
-        'Pressure',
-        'Light',
-      ]),
-      type,
-    };
-  }
-
-  private generatePrototype() {
-    return {
-      viewport: {
-        x: 0,
-        y: 0,
-        zoom: 1,
-      },
-      nodes: [],
-      edges: [],
-    };
-  }
-
   private generateTemplate(userId: number) {
-    const channelCount = faker.number.int({ min: 2, max: 8 });
-    const channels = Array.from({ length: channelCount }, () =>
-      this.generateChannel(),
-    );
-
     return {
       name:
         faker.helpers.arrayElement([
@@ -67,7 +36,6 @@ export class TemplateSeedService {
       description: faker.lorem.paragraph(),
       userId,
       public: true,
-      channels,
       createdAt: faker.date.past(),
       updatedAt: faker.date.recent(),
     };

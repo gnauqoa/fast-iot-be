@@ -12,7 +12,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Templates } from '../../../templates/infrastructure/persistence/document/entities/template.schema';
 import { ChannelsService } from '../../../channels/channels.service';
 import { TemplateRepository } from '../../../templates/infrastructure/persistence/template.repository';
-import { getChannelDefaultValue } from '../../../utils/channel';
 
 @Injectable()
 export class DeviceSeedService {
@@ -57,6 +56,7 @@ export class DeviceSeedService {
     const userIds = users.map((user) => user.id);
 
     const templates = await this.templateRepository.find();
+
     const templateIds = templates.map((template) => template.id);
 
     const devices = Array.from({ length: 30 }, () => {
@@ -88,18 +88,6 @@ export class DeviceSeedService {
         })
         .where('id = :id', { id: device.id })
         .execute();
-
-      const template = templates.find(
-        (template) => template.id === device.templateId,
-      );
-
-      for (const channel of template?.channels || []) {
-        await this.channelService.create({
-          deviceId: device.id,
-          name: channel.name,
-          value: getChannelDefaultValue(channel.type),
-        });
-      }
     }
   }
 }

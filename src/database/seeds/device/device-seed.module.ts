@@ -7,7 +7,8 @@ import { TemplateSchema } from '../../../templates/infrastructure/persistence/do
 import { MongooseModule } from '@nestjs/mongoose';
 import { Templates } from '../../../templates/infrastructure/persistence/document/entities/template.schema';
 import { ChannelsModule } from '../../../channels/channels.module';
-import { TemplatesModule } from '../../../templates/templates.module';
+import { TemplateRepository } from '../../../templates/infrastructure/persistence/template.repository';
+import { TemplateDocumentRepository } from '../../../templates/infrastructure/persistence/document/repositories/template.repository';
 
 @Module({
   imports: [
@@ -19,9 +20,14 @@ import { TemplatesModule } from '../../../templates/templates.module';
       },
     ]),
     ChannelsModule,
-    TemplatesModule,
   ],
-  providers: [DeviceSeedService],
+  providers: [
+    DeviceSeedService,
+    {
+      provide: TemplateRepository,
+      useClass: TemplateDocumentRepository,
+    },
+  ],
   exports: [DeviceSeedService],
 })
 export class DeviceSeedModule {}
