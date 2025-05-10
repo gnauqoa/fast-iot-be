@@ -44,6 +44,7 @@ import { ChannelValueType } from '../channels/infrastructure/persistence/documen
 @Injectable()
 export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
   private readonly CACHE_KEY_PREFIX = 'device';
+  private readonly CACHE_TTL = 3600; // Cache TTL in seconds (1 hour)
 
   constructor(
     @InjectRepository(DeviceEntity) repo: Repository<DeviceEntity>,
@@ -55,6 +56,62 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {
     super(repo);
+  }
+
+  /**
+   * Get device data from cache or database
+   * @param id - Device ID
+   * @returns Device entity with channels
+   */
+  private async getDeviceDataFromCache(id: number): Promise<DeviceEntity | null> {
+    const cacheKey = `${this.CACHE_KEY_PREFIX}:${id}`;
+    let deviceData: DeviceEntity | null = await this.cacheManager.get(cacheKey);
+
+    if (!deviceData) {
+      deviceData = await this.repo.findOne({
+        where: { id },
+        join: {
+          alias: 'device',
+          leftJoinAndSelect: {
+            user: 'device.user',
+          },
+        },
+      });
+
+      if (deviceData) {
+        deviceData.channels = await this.channelRepository.getDeviceChannel(id) || [];
+        await this.cacheManager.set(cacheKey, deviceData, this.CACHE_TTL);
+      }
+    }
+
+    return deviceData;
+  }
+
+  /**
+   * Update device data in cache
+   * @param id - Device ID
+   * @param deviceData - Updated device data
+   */
+  private async updateDeviceCache(
+    id: number,
+    deviceData: Partial<DeviceEntity>,
+  ): Promise<void> {
+    const cacheKey = `${this.CACHE_KEY_PREFIX}:${id}`;
+    const existingData = await this.getDeviceDataFromCache(id);
+
+    if (existingData) {
+      const updatedData = { ...existingData, ...deviceData };
+      await this.cacheManager.set(cacheKey, updatedData, this.CACHE_TTL);
+    }
+  }
+
+  /**
+   * Invalidate device cache
+   * @param id - Device ID
+   */
+  private async invalidateDeviceCache(id: number): Promise<void> {
+    const cacheKey = `${this.CACHE_KEY_PREFIX}:${id}`;
+    await this.cacheManager.del(cacheKey);
   }
 
   /**
@@ -158,7 +215,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
    * @returns Updated device channel information
    */
   async socketUpdate(id: number, payload: UpdateDevicePinDto) {
-    if (!payload.channelName || !payload.channelValue) {
+    if (!payload.channelName || payload.channelValue === undefined) {
       throw new BadRequestException(
         'Channel name and value are required for update',
       );
@@ -171,8 +228,27 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       payload.channelValue,
     );
 
-    // Update cache and return updated channels
-    return this.updateChannelCache(id, channel.name, channel.value);
+    // Get current device data
+    const deviceData = await this.getDeviceDataFromCache(id);
+    if (!deviceData) {
+      throw new BadRequestException('Device not found');
+    }
+
+    // Update channels in device data
+    const updatedChannels = (deviceData.channels || []).map((c) =>
+      c.name === channel.name ? { ...c, value: channel.value } : c,
+    );
+
+    // Update cache with new channel data
+    await this.updateDeviceCache(id, { channels: updatedChannels });
+
+    this.notifyClients(id, { id, channels: updatedChannels });
+    this.mqttService.publicMessage(`device/${id}`, {
+      name: channel.name,
+      value: channel.value,
+    });
+
+    return updatedChannels;
   }
 
   /**
@@ -226,24 +302,22 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
         },
       });
 
-      // Update channel if name and value are provided
-      if (
-        updatedDevice &&
-        deviceData.channelName &&
-        deviceData.channelValue !== undefined
-      ) {
-        await this.channelRepository.updateDeviceChannel(
-          id,
-          deviceData.channelName,
-          deviceData.channelValue,
-        );
+      if (updatedDevice) {
+        // Update channel if name and value are provided
+        if (deviceData.channelName && deviceData.channelValue !== undefined) {
+          await this.channelRepository.updateDeviceChannel(
+            id,
+            deviceData.channelName,
+            deviceData.channelValue,
+          );
 
-        // Update cache and assign updated channels to device
-        updatedDevice.channels = await this.updateChannelCache(
-          id,
-          deviceData.channelName,
-          deviceData.channelValue,
-        );
+          // Get current channels and update the specific channel
+          const channels = await this.channelRepository.getDeviceChannel(id) || [];
+          updatedDevice.channels = channels;
+        }
+
+        // Update cache with new device data
+        await this.updateDeviceCache(id, updatedDevice);
       }
 
       await queryRunner.commitTransaction();
