@@ -48,18 +48,11 @@ export class ChannelsService {
     return this.channelRepository.findByIds(ids);
   }
 
-  async update(
-    id: Channel['id'],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    updateChannelDto: UpdateChannelDto,
-  ) {
+  async update(id: Channel['id'], updateChannelDto: UpdateChannelDto) {
     // Do not remove comment below.
     // <updating-property />
 
-    return this.channelRepository.update(id, {
-      // Do not remove comment below.
-      // <updating-property-payload />
-    });
+    return this.channelRepository.update(id, updateChannelDto);
   }
 
   remove(id: Channel['id']) {

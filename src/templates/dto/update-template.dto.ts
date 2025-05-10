@@ -9,11 +9,8 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import {
-  IChannelDefinition,
-  IPrototype,
-  PrototypeDefinition,
-} from '../domain/template';
+import { ChannelDefinitionDto } from './channel-definition.dto';
+import { PrototypeDto } from './prototype.dto';
 
 export class UpdateTemplateDto {
   @ApiProperty({
@@ -39,34 +36,34 @@ export class UpdateTemplateDto {
   description?: string;
 
   @ApiProperty({
-    type: [Object],
+    type: [ChannelDefinitionDto],
     description: 'List of channels defined in the template',
     required: false,
   })
   @ValidateNested({ each: true })
-  @Type(() => Object)
+  @Type(() => ChannelDefinitionDto)
   @IsOptional()
-  channels?: IChannelDefinition[];
+  channels?: ChannelDefinitionDto[];
 
   @ApiProperty({
-    type: Object,
+    type: PrototypeDto,
     description: 'Desktop prototype configuration',
     required: false,
   })
   @ValidateNested()
-  @Type(() => PrototypeDefinition)
+  @Type(() => PrototypeDto)
   @IsOptional()
-  desktopPrototype?: IPrototype;
+  desktopPrototype?: PrototypeDto;
 
   @ApiProperty({
-    type: Object,
+    type: PrototypeDto,
     description: 'Mobile prototype configuration',
     required: false,
   })
   @ValidateNested()
-  @Type(() => PrototypeDefinition)
+  @Type(() => PrototypeDto)
   @IsOptional()
-  mobilePrototype?: IPrototype;
+  mobilePrototype?: PrototypeDto;
 
   @ApiProperty({
     type: Boolean,

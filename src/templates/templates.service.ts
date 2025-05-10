@@ -78,15 +78,10 @@ export class TemplatesService {
     });
   }
 
-  async findById(id: Template['id'], userId: number): Promise<Template> {
+  async findById(id: Template['id']): Promise<Template> {
     const template = await this.templateRepository.findById(id);
 
     if (!template) {
-      throw new NotFoundException('Template not found');
-    }
-
-    // Check if user has access to the template
-    if (template.userId !== userId && !template.public) {
       throw new NotFoundException('Template not found');
     }
 
@@ -105,14 +100,9 @@ export class TemplatesService {
   async update(
     id: Template['id'],
     updateTemplateDto: UpdateTemplateDto,
-    userId: number,
   ): Promise<Template> {
-    const template = await this.findById(id, userId);
-
-    // Check if user is the owner
-    if (template.userId !== userId) {
-      throw new BadRequestException('You can only update your own templates');
-    }
+    const template = await this.findById(id);
+    console.log({ updateTemplateDto123123: updateTemplateDto });
     try {
       const updateData: DeepPartial<Template> = {
         name: updateTemplateDto.name,
@@ -140,14 +130,7 @@ export class TemplatesService {
     }
   }
 
-  async remove(id: Template['id'], userId: number): Promise<void> {
-    const template = await this.findById(id, userId);
-
-    // Check if user is the owner
-    if (template.userId !== userId) {
-      throw new BadRequestException('You can only delete your own templates');
-    }
-
+  async remove(id: Template['id']): Promise<void> {
     await this.templateRepository.remove(id);
   }
 }

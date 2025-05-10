@@ -28,6 +28,7 @@ import {
 } from '../utils/dto/infinity-pagination-response.dto';
 import { FindAllTemplatesDto } from './dto/find-all-templates.dto';
 import { infinityPagination } from '../utils/pagination';
+import { TemplateOwnershipGuard } from './template-ownership.guard';
 
 @ApiTags('Templates')
 @ApiBearerAuth()
@@ -71,6 +72,7 @@ export class TemplatesController {
   }
 
   @Get(':id')
+  @UseGuards(TemplateOwnershipGuard)
   @ApiParam({
     name: 'id',
     type: String,
@@ -79,11 +81,12 @@ export class TemplatesController {
   @ApiOkResponse({
     type: Template,
   })
-  findById(@Param('id') id: string, @Request() req) {
-    return this.templatesService.findById(id, req.user.id);
+  findById(@Param('id') id: string) {
+    return this.templatesService.findById(id);
   }
 
   @Patch(':id')
+  @UseGuards(TemplateOwnershipGuard)
   @ApiParam({
     name: 'id',
     type: String,
@@ -95,18 +98,18 @@ export class TemplatesController {
   update(
     @Param('id') id: string,
     @Body() updateTemplateDto: UpdateTemplateDto,
-    @Request() req,
   ) {
-    return this.templatesService.update(id, updateTemplateDto, req.user.id);
+    return this.templatesService.update(id, updateTemplateDto);
   }
 
   @Delete(':id')
+  @UseGuards(TemplateOwnershipGuard)
   @ApiParam({
     name: 'id',
     type: String,
     required: true,
   })
-  remove(@Param('id') id: string, @Request() req) {
-    return this.templatesService.remove(id, req.user.id);
+  remove(@Param('id') id: string) {
+    return this.templatesService.remove(id);
   }
 }
