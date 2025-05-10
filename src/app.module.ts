@@ -27,13 +27,6 @@ import { MongooseConfigService } from './database/mongoose-config.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-ioredis-yet';
 
-const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
-  useClass: TypeOrmConfigService,
-  dataSourceFactory: async (options: DataSourceOptions) => {
-    return new DataSource(options).initialize();
-  },
-});
-
 @Module({
   imports: [
     TemplatesModule,
@@ -43,7 +36,15 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
       load: [databaseConfig, authConfig, appConfig, mailConfig, fileConfig],
       envFilePath: ['.env'],
     }),
-    infrastructureDatabaseModule,
+    TypeOrmModule.forRootAsync({
+      useClass: TypeOrmConfigService,
+      dataSourceFactory: async (options: DataSourceOptions) => {
+        return new DataSource(options).initialize();
+      },
+    }),
+    MongooseModule.forRootAsync({
+      useClass: MongooseConfigService,
+    }),
     CacheModule.registerAsync({
       isGlobal: true,
       inject: [ConfigService],
@@ -60,9 +61,6 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
           ttl: 60, // default TTL in seconds
         };
       },
-    }),
-    MongooseModule.forRootAsync({
-      useClass: MongooseConfigService,
     }),
     I18nModule.forRootAsync({
       useFactory: (configService: ConfigService<AllConfigType>) => ({
