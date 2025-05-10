@@ -6,6 +6,7 @@ import {
   Override,
   ParsedBody,
   ParsedRequest,
+  GetManyDefaultResponse,
 } from '@dataui/crud';
 import { DeviceEntity } from './infrastructure/persistence/relational/entities/device.entity';
 import { DevicesService } from './devices.service';
@@ -28,6 +29,34 @@ import bcrypt from 'bcryptjs';
 import { ChannelsService } from '../channels/channels.service';
 import { TemplateRepository } from '../templates/infrastructure/persistence/template.repository';
 import { getChannelDefaultValue } from '../utils/channel';
+import { Template } from '../templates/domain/template';
+
+type DeviceWithTemplate = {
+  id: number;
+  name: string;
+  lastUpdate: Date;
+  status: string;
+  position: any;
+  user: any;
+  userId: number;
+  role: number;
+  channels?: any[];
+  deviceKey: string;
+  deviceToken: string;
+  templateId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  template: Template | null;
+};
+
+interface DevicesResponse {
+  data: DeviceWithTemplate[];
+  count: number;
+  total: number;
+  page: number;
+  pageCount: number;
+}
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -85,7 +114,7 @@ export class DevicesController implements CrudController<DeviceEntity> {
   async ovGetManyBase(
     @ParsedRequest() req: CrudRequest,
     @Request() request: any,
-  ): Promise<any> {
+  ): Promise<DevicesResponse> {
     const user = request.user;
     const userId: number = user.id;
     const userRoleId: number = user.role.id;
@@ -97,7 +126,7 @@ export class DevicesController implements CrudController<DeviceEntity> {
     );
     req.parsed.search = { $and: searchFilters };
 
-    return await this.service.getMany({
+    const devices = (await this.service.getMany({
       ...req,
       parsed: {
         ...req.parsed,
@@ -105,17 +134,48 @@ export class DevicesController implements CrudController<DeviceEntity> {
           $and: searchFilters || [],
         },
       },
-    });
+    })) as GetManyDefaultResponse<DeviceEntity>;
+
+    // Get template IDs from devices
+    const templateIds = devices.data
+      .filter((device) => device.templateId)
+      .map((device) => device.templateId);
+
+    // Fetch templates if there are any template IDs
+    let templates: Template[] = [];
+    if (templateIds.length > 0) {
+      templates = await this.templateRepository.findByIds(templateIds);
+    }
+
+    // Create a map of templates by ID for quick lookup
+    const templateMap = templates.reduce<Record<string, Template>>(
+      (acc, template) => {
+        acc[template.id] = template;
+        return acc;
+      },
+      {},
+    );
+
+    // Add template information to each device
+    const devicesWithTemplates: DevicesResponse = {
+      data: devices.data.map((device) => ({
+        ...device,
+        template: device.templateId ? templateMap[device.templateId] : null,
+      })),
+      count: devices.count,
+      total: devices.total,
+      page: devices.page,
+      pageCount: devices.pageCount,
+    };
+
+    return devicesWithTemplates;
   }
 
   @Override('getOneBase')
   @UseGuards(DeviceOwnershipGuard)
-  async ovGetOneBase(@Request() request: any): Promise<DeviceEntity> {
+  ovGetOneBase(@Request() request: any): Promise<DeviceEntity> {
     return {
       ...request.device,
-      channels: await this.service.getDeviceChannelsFromCache(
-        request.device.id,
-      ),
     };
   }
 

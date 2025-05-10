@@ -32,8 +32,7 @@ import { ScanDevicesDto } from './dto/scan-devices.dto';
 import { createPaginatedResult } from '../utils/pagination';
 import { createPointExpression } from '../utils/position';
 import { METERS_PER_DEGREE } from '../../test/utils/constants';
-import { Channel } from '../channels/domain/channel';
-import { ChannelValueType } from '../channels/infrastructure/persistence/document/entities/channel.schema';
+import { TemplatesService } from '../templates/templates.service';
 
 /**
  * Service for handling device operations including geographic scanning,
@@ -54,8 +53,22 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     private readonly socketIoGateway: SocketIoGateway,
     private readonly channelRepository: ChannelRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly templateService: TemplatesService,
   ) {
     super(repo);
+  }
+
+  async findById(id: number): Promise<DeviceEntity | null> {
+    const device = await this.getDeviceDataFromCache(id);
+    if (!device) {
+      return null;
+    }
+    const template = await this.templateService.findById(device.templateId);
+
+    return Object.assign(new DeviceEntity(), {
+      ...device,
+      template,
+    });
   }
 
   /**
@@ -106,15 +119,6 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       const updatedData = { ...existingData, ...deviceData };
       await this.cacheManager.set(cacheKey, updatedData, this.CACHE_TTL);
     }
-  }
-
-  /**
-   * Invalidate device cache
-   * @param id - Device ID
-   */
-  private async invalidateDeviceCache(id: number): Promise<void> {
-    const cacheKey = `${this.CACHE_KEY_PREFIX}:${id}`;
-    await this.cacheManager.del(cacheKey);
   }
 
   /**
@@ -169,46 +173,6 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       'device_data',
       deviceData,
     );
-  }
-
-  /**
-   * Gets device channels from cache or repository
-   * @param id - Device ID
-   * @returns Array of device channels
-   */
-  async getDeviceChannelsFromCache(id: number): Promise<Channel[]> {
-    const cacheKey = `${this.CACHE_KEY_PREFIX}:${id}:channels`;
-    let channels: Channel[] | null = await this.cacheManager.get(cacheKey);
-
-    if (!channels) {
-      channels = (await this.channelRepository.getDeviceChannel(id)) || [];
-      await this.cacheManager.set(cacheKey, channels);
-    }
-
-    return channels;
-  }
-
-  /**
-   * Updates channel cache with new channel values
-   * @param id - Device ID
-   * @param channelName - Name of the channel to update
-   * @param channelValue - New value for the channel
-   * @returns Updated array of channels
-   */
-  private async updateChannelCache(
-    id: number,
-    channelName: string,
-    channelValue: ChannelValueType,
-  ): Promise<Channel[]> {
-    const cacheKey = `${this.CACHE_KEY_PREFIX}:${id}:channels`;
-    const channels = await this.getDeviceChannelsFromCache(id);
-
-    const updatedChannels = channels.map((c) =>
-      c.name === channelName ? { ...c, value: channelValue } : c,
-    );
-
-    await this.cacheManager.set(cacheKey, updatedChannels);
-    return updatedChannels;
   }
 
   /**

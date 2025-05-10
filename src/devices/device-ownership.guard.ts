@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { DevicesService } from './devices.service';
 import { RoleEnum } from '../roles/roles.enum';
-import { DeviceRole } from './domain/device-role.enum';
 
 @Injectable()
 export class DeviceOwnershipGuard implements CanActivate {
@@ -24,16 +23,7 @@ export class DeviceOwnershipGuard implements CanActivate {
 
     const userId: number = user.id;
     const userRoleId: number = user.role.id;
-    const device = await this.devicesService.findOne({
-      where: { id: Number(deviceId), role: DeviceRole.DEVICE },
-      join: {
-        alias: 'device',
-        leftJoinAndSelect: {
-          user: 'device.user',
-          template: 'device.template',
-        },
-      },
-    });
+    const device = await this.devicesService.findById(deviceId);
 
     if (!device) {
       throw new NotFoundException('Device not found');
