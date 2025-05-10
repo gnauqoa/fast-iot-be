@@ -3,6 +3,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -230,80 +231,107 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
   async mqttUpdate(id: number, deviceData: UpdateDeviceSensorDto) {
     const queryRunner = this.repo.manager.connection.createQueryRunner();
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
     try {
-      // Prepare update data
-      const updateData: Partial<DeviceEntity> = {
-        status: DeviceStatusStr.ONLINE,
-        lastUpdate: new Date(),
-      };
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
 
-      // Create update query
-      const updateQuery = queryRunner.manager
-        .createQueryBuilder()
-        .update(DeviceEntity)
-        .where('id = :id', { id });
+      // Update device status and position
+      await this.updateDeviceStatusAndPosition(queryRunner, id, deviceData);
 
-      // Add position update if coordinates are provided
-      if (deviceData.latitude && deviceData.longitude) {
-        const longitude = parseFloat(deviceData.longitude);
-        const latitude = parseFloat(deviceData.latitude);
-        updateQuery.set({
-          ...updateData,
-          position: () => createPointExpression(longitude, latitude),
-        });
-      } else {
-        updateQuery.set(updateData);
+      // Get updated device data
+      const updatedDevice = await this.getDeviceDataFromCache(id);
+      if (!updatedDevice) {
+        throw new NotFoundException('Device not found');
       }
 
-      // Execute update
-      await updateQuery.execute();
-
-      // Retrieve updated device with relations
-      const updatedDevice = await queryRunner.manager.findOne(DeviceEntity, {
-        where: { id },
-        join: {
-          alias: 'device',
-          leftJoinAndSelect: {
-            user: 'device.user',
-          },
-        },
-      });
-
-      if (updatedDevice) {
-        // Update channel if name and value are provided
-        if (deviceData.channelName && deviceData.channelValue !== undefined) {
-          await this.channelRepository.updateDeviceChannel(
-            id,
-            updatedDevice.templateId,
-            deviceData.channelName,
-            deviceData.channelValue,
-          );
-
-          // Get current channels and update the specific channel
-          const channels =
-            (await this.channelRepository.getDeviceChannel(id)) || [];
-          updatedDevice.channels = channels;
-        }
-
-        // Update cache with new device data
-        await this.updateDeviceCache(id, updatedDevice);
+      // Update channel if provided
+      let finalDeviceData = { ...updatedDevice };
+      if (deviceData.channelName && deviceData.channelValue !== undefined) {
+        finalDeviceData = await this.updateDeviceChannel(
+          id,
+          updatedDevice,
+          deviceData.channelName,
+          deviceData.channelValue,
+        );
       }
 
       await queryRunner.commitTransaction();
-      info(`Device updated: ${JSON.stringify(updatedDevice)}`);
+      info(`Device updated: ${JSON.stringify(finalDeviceData)}`);
 
       // Notify clients about the update
-      this.notifyClients(id, updatedDevice);
+      this.notifyClients(id, finalDeviceData);
 
-      return updatedDevice;
+      return finalDeviceData;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw err;
     } finally {
       await queryRunner.release();
     }
+  }
+
+  /**
+   * Update device status and position
+   * @private
+   */
+  private async updateDeviceStatusAndPosition(
+    queryRunner: any,
+    id: number,
+    deviceData: UpdateDeviceSensorDto,
+  ): Promise<void> {
+    const updateData: Partial<DeviceEntity> = {
+      status: DeviceStatusStr.ONLINE,
+      lastUpdate: new Date(),
+    };
+
+    const updateQuery = queryRunner.manager
+      .createQueryBuilder()
+      .update(DeviceEntity)
+      .where('id = :id', { id });
+
+    if (deviceData.latitude && deviceData.longitude) {
+      const longitude = parseFloat(deviceData.longitude);
+      const latitude = parseFloat(deviceData.latitude);
+      updateQuery.set({
+        ...updateData,
+        position: () => createPointExpression(longitude, latitude),
+      });
+    } else {
+      updateQuery.set(updateData);
+    }
+
+    await updateQuery.execute();
+  }
+
+  /**
+   * Update device channel and cache
+   * @private
+   */
+  private async updateDeviceChannel(
+    id: number,
+    device: DeviceEntity,
+    channelName: string,
+    channelValue: any,
+  ): Promise<DeviceEntity> {
+    const channel = await this.channelRepository.updateDeviceChannel(
+      id,
+      device.templateId,
+      channelName,
+      channelValue,
+    );
+
+    const updatedChannels = device.channels?.find(
+      (c) => c.name === channel.name,
+    )
+      ? device.channels.map((c) => (c.name === channel.name ? channel : c))
+      : [...(device.channels || []), channel];
+
+    const updatedDevice = Object.assign(new DeviceEntity(), {
+      ...device,
+      channels: updatedChannels,
+    });
+
+    await this.updateDeviceCache(id, updatedDevice);
+    return updatedDevice;
   }
 }
