@@ -17,7 +17,7 @@ export class ChannelDocumentRepository implements ChannelRepository {
     private readonly templateService: TemplatesService,
   ) {}
 
-  async getDeviceChannel(deviceId: number): Promise<Channel[]> {
+  async getDeviceChannels(deviceId: number): Promise<Channel[]> {
     const entityObject = await this.channelModel.find({ deviceId });
     if (!entityObject) {
       return [];

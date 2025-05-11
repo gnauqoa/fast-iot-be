@@ -5,7 +5,7 @@ import { Channel } from '../../domain/channel';
 import { ChannelValueType } from './document/entities/channel.schema';
 
 export abstract class ChannelRepository {
-  abstract getDeviceChannel(deviceId: number): Promise<Channel[]>;
+  abstract getDeviceChannels(deviceId: number): Promise<Channel[]>;
   abstract updateDeviceChannel(
     deviceId: number,
     templateId: string,

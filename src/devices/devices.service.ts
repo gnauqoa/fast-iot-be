@@ -96,7 +96,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
 
       if (deviceData) {
         deviceData.channels =
-          (await this.channelRepository.getDeviceChannel(id)) || [];
+          (await this.channelRepository.getDeviceChannels(id)) || [];
         await this.cacheManager.set(cacheKey, deviceData, this.CACHE_TTL);
       }
     }

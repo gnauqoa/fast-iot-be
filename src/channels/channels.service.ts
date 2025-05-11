@@ -15,8 +15,8 @@ export class ChannelsService {
     private readonly channelRepository: ChannelRepository,
   ) {}
 
-  async getDeviceChannel(deviceId: number) {
-    return this.channelRepository.getDeviceChannel(deviceId);
+  async getDeviceChannels(deviceId: number) {
+    return this.channelRepository.getDeviceChannels(deviceId);
   }
 
   async create(createChannelDto: CreateChannelDto) {
