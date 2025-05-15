@@ -76,7 +76,7 @@ interface DevicesResponse {
       user: { eager: true },
       template: { eager: true },
     },
-    sort: [{ field: 'createdAt', order: 'DESC' }],
+    sort: [{ field: 'lastUpdate', order: 'DESC' }],
   },
 
   routes: {
