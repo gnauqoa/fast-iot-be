@@ -38,11 +38,7 @@ class EnvironmentVariablesValidator {
 
   @IsString()
   @IsOptional()
-  MQTT_PORT: string;
-
-  @IsString()
-  @IsOptional()
-  MQTT_HOST: string;
+  MQTT_URL: string;
 
   @IsString()
   @IsOptional()
@@ -74,8 +70,7 @@ export default registerAs<AppConfig>('app', () => {
     workingDirectory: process.env.PWD || process.cwd(),
     frontendDomain: process.env.FRONTEND_DOMAIN,
     backendDomain: process.env.BACKEND_DOMAIN ?? 'http://localhost',
-    mqttHost: process.env.MQTT_HOST ?? 'http://localhost:1883',
-    mqttPort: process.env.MQTT_PORT ?? 1883,
+    mqttUrl: process.env.MQTT_URL ?? 'http://localhost:1883',
     mqttUser: process.env.MQTT_USER,
     mqttPass: process.env.MQTT_PASSWORD,
     port: process.env.APP_PORT

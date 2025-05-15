@@ -17,10 +17,7 @@ export class MqttService implements OnModuleInit {
 
   onModuleInit() {
     const clientId = `mqtt_${crypto.randomUUID()}`;
-    const mqttHost = this.configService.getOrThrow<string>('app.mqttHost', {
-      infer: true,
-    });
-    const mqttPort = this.configService.getOrThrow<number>('app.mqttPort', {
+    const mqttUrl = this.configService.getOrThrow<string>('app.mqttUrl', {
       infer: true,
     });
     const mqttUser = this.configService.getOrThrow<string>('app.mqttUser', {
@@ -30,9 +27,7 @@ export class MqttService implements OnModuleInit {
       infer: true,
     });
 
-    this.mqttClient = connect({
-      host: mqttHost,
-      port: mqttPort,
+    this.mqttClient = connect(mqttUrl, {
       username: mqttUser,
       password: mqttPass,
       clientId,
