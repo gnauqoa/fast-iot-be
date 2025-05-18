@@ -10,7 +10,7 @@ import { Templates } from '../../../templates/infrastructure/persistence/documen
 import { ChannelsService } from '../../../channels/channels.service';
 import { TemplateRepository } from '../../../templates/infrastructure/persistence/template.repository';
 import { METERS_PER_DEGREE } from '../../../../test/utils/constants';
-import { faker } from '@faker-js/faker/.';
+import { faker } from '@faker-js/faker';
 import * as crypto from 'crypto';
 
 @Injectable()
