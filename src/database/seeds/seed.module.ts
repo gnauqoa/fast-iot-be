@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { TypeOrmConfigService } from '../typeorm-config.service';
 import { RoleSeedModule } from './role/role-seed.module';
@@ -14,7 +13,7 @@ import { TemplateSeedModule } from './template/template-seed.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MongooseConfigService } from '../mongoose-config.service';
 import { CacheModule } from '@nestjs/cache-manager';
-import { redisStore } from 'cache-manager-ioredis-yet';
+import { CacheConfigService } from '../../cache/cache-config.service';
 
 @Module({
   imports: [
@@ -39,20 +38,7 @@ import { redisStore } from 'cache-manager-ioredis-yet';
     }),
     CacheModule.registerAsync({
       isGlobal: true,
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const redisUrl = configService.getOrThrow<string>(
-          'database.workerHost',
-          {
-            infer: true,
-          },
-        );
-        return {
-          store: redisStore(),
-          url: redisUrl,
-          ttl: 60, // default TTL in seconds
-        };
-      },
+      useClass: CacheConfigService,
     }),
   ],
 })

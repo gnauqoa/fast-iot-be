@@ -89,7 +89,11 @@ class EnvironmentVariablesValidator {
 
   @IsString()
   @IsOptional()
-  WORKER_HOST: string;
+  REDIS_HOST: string;
+
+  @IsInt()
+  @IsOptional()
+  REDIS_PORT: number;
 }
 
 export default registerAs<DatabaseConfig>('database', () => {
@@ -119,6 +123,9 @@ export default registerAs<DatabaseConfig>('database', () => {
     documentName: process.env.DOCUMENT_NAME,
     documentUsername: process.env.DOCUMENT_USERNAME,
     documentPassword: process.env.DOCUMENT_PASSWORD,
-    workerHost: process.env.WORKER_HOST,
+    redisHost: process.env.REDIS_HOST ?? 'redis',
+    redisPort: process.env.REDIS_PORT
+      ? parseInt(process.env.REDIS_PORT, 10)
+      : 6379,
   };
 });

@@ -59,6 +59,16 @@ class EnvironmentVariablesValidator {
   @IsString()
   @IsOptional()
   APP_HEADER_LANGUAGE: string;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  MAX_CACHE_ITEMS: number;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  MAX_CACHE_TTL: number;
 }
 
 export default registerAs<AppConfig>('app', () => {
@@ -81,5 +91,11 @@ export default registerAs<AppConfig>('app', () => {
     apiPrefix: process.env.API_PREFIX || 'api',
     fallbackLanguage: process.env.APP_FALLBACK_LANGUAGE || 'en',
     headerLanguage: process.env.APP_HEADER_LANGUAGE || 'x-custom-lang',
+    maxCacheItems: process.env.MAX_CACHE_ITEMS
+      ? parseInt(process.env.MAX_CACHE_ITEMS, 10)
+      : 100,
+    maxCacheTtl: process.env.MAX_CACHE_TTL
+      ? parseInt(process.env.MAX_CACHE_TTL, 10)
+      : 60,
   };
 });

@@ -6,7 +6,7 @@ export class RedisConfigService {
   constructor(private configService: ConfigService) {}
 
   get redisUrl(): string {
-    return this.configService.getOrThrow<string>('database.workerHost', {
+    return this.configService.getOrThrow<string>('database.redisHost', {
       infer: true,
     });
   }
