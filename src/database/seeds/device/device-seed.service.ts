@@ -9,6 +9,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Templates } from '../../../templates/infrastructure/persistence/document/entities/template.schema';
 import { ChannelsService } from '../../../channels/channels.service';
 import { TemplateRepository } from '../../../templates/infrastructure/persistence/template.repository';
+import { METERS_PER_DEGREE } from '../../../../test/utils/constants';
+import { faker } from '@faker-js/faker/.';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class DeviceSeedService {
@@ -43,48 +46,48 @@ export class DeviceSeedService {
       })
       .save();
 
-    // const areaCoordinates = {
-    //   lat: 10.8080783,
-    //   lng: 106.7043858,
-    //   radius: 10000,
-    // };
+    const areaCoordinates = {
+      lat: 10.8080783,
+      lng: 106.7043858,
+      radius: 10000,
+    };
 
-    // const users = await this.userRepository.find({});
-    // const userIds = users.map((user) => user.id);
+    const users = await this.userRepository.find({});
+    const userIds = users.map((user) => user.id);
 
-    // const templates = await this.templateRepository.find();
+    const templates = await this.templateRepository.find();
 
-    // const templateIds = templates.map((template) => template.id);
+    const templateIds = templates.map((template) => template.id);
 
-    // const devices = Array.from({ length: 30 }, () => {
-    //   return this.repository.create({
-    //     name: faker.vehicle.vehicle(),
-    //     userId: userIds[Math.floor(Math.random() * userIds.length)],
-    //     deviceKey: crypto.randomBytes(16).toString('hex'),
-    //     deviceToken: crypto.randomBytes(16).toString('hex'),
-    //     role: DeviceRole.DEVICE,
-    //     templateId: templateIds[Math.floor(Math.random() * templateIds.length)],
-    //   });
-    // });
+    const devices = Array.from({ length: 30 }, () => {
+      return this.repository.create({
+        name: faker.vehicle.vehicle(),
+        userId: userIds[Math.floor(Math.random() * userIds.length)],
+        deviceKey: crypto.randomBytes(16).toString('hex'),
+        deviceToken: crypto.randomBytes(16).toString('hex'),
+        role: DeviceRole.DEVICE,
+        templateId: templateIds[Math.floor(Math.random() * templateIds.length)],
+      });
+    });
 
-    // const savedDevices = await this.repository.save(devices);
+    const savedDevices = await this.repository.save(devices);
 
-    // for (const device of savedDevices) {
-    //   const lng =
-    //     areaCoordinates.lng +
-    //     ((Math.random() - 0.01) * areaCoordinates.radius) / METERS_PER_DEGREE;
-    //   const lat =
-    //     areaCoordinates.lat +
-    //     ((Math.random() - 0.01) * areaCoordinates.radius) / METERS_PER_DEGREE;
+    for (const device of savedDevices) {
+      const lng =
+        areaCoordinates.lng +
+        ((Math.random() - 0.01) * areaCoordinates.radius) / METERS_PER_DEGREE;
+      const lat =
+        areaCoordinates.lat +
+        ((Math.random() - 0.01) * areaCoordinates.radius) / METERS_PER_DEGREE;
 
-    //   await this.repository
-    //     .createQueryBuilder()
-    //     .update(DeviceEntity)
-    //     .set({
-    //       position: () => `ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)`,
-    //     })
-    //     .where('id = :id', { id: device.id })
-    //     .execute();
-    // }
+      await this.repository
+        .createQueryBuilder()
+        .update(DeviceEntity)
+        .set({
+          position: () => `ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)`,
+        })
+        .where('id = :id', { id: device.id })
+        .execute();
+    }
   }
 }
