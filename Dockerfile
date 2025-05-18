@@ -17,9 +17,4 @@ RUN sed -i 's/\r//g' /opt/startup.sh
 
 WORKDIR /usr/src/app
 RUN if [ ! -f .env ]; then cp env-example .env; fi
-RUN npm run migration:run
-RUN npm run seed
-RUN npm run build
-RUN cp -r ./dist/i18n ./dist/src/
-# RUN npm run migration:run
 CMD ["/opt/startup.sh"]

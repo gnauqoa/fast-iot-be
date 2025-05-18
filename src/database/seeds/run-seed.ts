@@ -19,4 +19,12 @@ const runSeed = async () => {
   await app.close();
 };
 
-void runSeed();
+void runSeed()
+  .then(() => {
+    console.log('✅ Seeding completed');
+    process.exit(0); // Ensure exit
+  })
+  .catch((err) => {
+    console.error('❌ Seeding failed', err);
+    process.exit(1);
+  });
