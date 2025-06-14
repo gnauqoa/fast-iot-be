@@ -3,4 +3,5 @@ export enum ChannelType {
   NUMBER = 'Number',
   BOOLEAN = 'Boolean',
   OBJECT = 'Object',
+  SELECT = 'Select',
 }

@@ -19,6 +19,7 @@ export class Channel {
       { type: 'number' },
       { type: 'boolean' },
       { type: 'object' },
+      { type: 'array' },
     ],
   })
   value: ChannelValueType;

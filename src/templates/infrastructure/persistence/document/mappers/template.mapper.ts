@@ -18,6 +18,7 @@ export class TemplateMapper {
     domainEntity.channels = raw.channels.map((channel) => ({
       name: channel.name,
       type: channel.type,
+      options: channel.options,
     }));
 
     // Map desktop prototype if exists
@@ -47,6 +48,7 @@ export class TemplateMapper {
     persistenceSchema.channels = domainEntity.channels.map((channel) => ({
       name: channel.name,
       type: channel.type,
+      options: channel.options,
     }));
 
     // Map desktop prototype if exists

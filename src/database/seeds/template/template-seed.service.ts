@@ -6,6 +6,7 @@ import { Templates } from '../../../templates/infrastructure/persistence/documen
 import { UserEntity } from '../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ChannelType } from '../../../templates/domain/enums/channel-type.enum';
 
 @Injectable()
 export class TemplateSeedService {
@@ -19,18 +20,7 @@ export class TemplateSeedService {
   private generateTemplate(userId: number) {
     return {
       name:
-        faker.helpers.arrayElement([
-          'Smart Home',
-          'Industrial IoT',
-          'Environmental Monitoring',
-          'Energy Management',
-          'Security System',
-          'Healthcare Monitoring',
-          'Agriculture IoT',
-          'Smart City',
-          'Asset Tracking',
-          'Predictive Maintenance',
-        ]) +
+        faker.helpers.arrayElement(['Motorbike Rescue']) +
         ' Template ' +
         faker.number.int({ min: 1, max: 100 }),
       description: faker.lorem.paragraph(),
@@ -38,6 +28,22 @@ export class TemplateSeedService {
       public: true,
       createdAt: faker.date.past(),
       updatedAt: faker.date.recent(),
+      channels: [
+        {
+          name: 'status',
+          type: ChannelType.SELECT,
+          options: [
+            {
+              label: 'Accident',
+              value: 'accident',
+            },
+            {
+              label: 'Normal',
+              value: 'normal',
+            },
+          ],
+        },
+      ],
     };
   }
 
@@ -46,7 +52,7 @@ export class TemplateSeedService {
 
     await this.model.deleteMany();
 
-    const templates = Array.from({ length: 20 }, () => {
+    const templates = Array.from({ length: 1 }, () => {
       const randomUser = faker.helpers.arrayElement(users);
       return this.generateTemplate(randomUser.id);
     });

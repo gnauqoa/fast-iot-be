@@ -1,9 +1,17 @@
 import { PartialType } from '@nestjs/swagger';
 import { CreateDeviceDto } from './create-device.dto';
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsArray, ValidateNested } from 'class-validator';
 import { ChannelValueType } from '../../channels/infrastructure/persistence/document/entities/channel.schema';
+import { Type } from 'class-transformer';
 
 export class UpdateDeviceDto extends PartialType(CreateDeviceDto) {}
+
+export class ChannelUpdateDto {
+  @IsString()
+  channelName: string;
+
+  channelValue: ChannelValueType;
+}
 
 export class UpdateDevicePinDto {
   id: number;
@@ -14,6 +22,12 @@ export class UpdateDevicePinDto {
 
   @IsOptional()
   channelValue?: ChannelValueType;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ChannelUpdateDto)
+  @IsOptional()
+  channels?: ChannelUpdateDto[];
 }
 
 export class UpdateDeviceSensorDto extends UpdateDevicePinDto {

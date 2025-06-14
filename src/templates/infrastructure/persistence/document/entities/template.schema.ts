@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { now, HydratedDocument } from 'mongoose';
+import { now, HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 import { EntityDocumentHelper } from '../../../../../utils/document-entity-helper';
 import { Transform } from 'class-transformer';
 import {
@@ -54,6 +54,10 @@ export class Templates extends EntityDocumentHelper {
       {
         name: { type: String, required: true },
         type: { type: String, required: true },
+        options: {
+          type: [MongooseSchema.Types.Mixed],
+          required: false,
+        },
       },
     ],
   })

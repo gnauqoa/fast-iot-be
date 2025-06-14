@@ -25,6 +25,10 @@ export interface IPrototype {
 export interface IChannelDefinition {
   name: string;
   type: ChannelType;
+  options?: Array<{
+    label: string;
+    value: string;
+  }>;
 }
 
 export class ViewportDefinition {
