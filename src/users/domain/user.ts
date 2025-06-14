@@ -59,6 +59,12 @@ export class User {
   role?: Role | null;
 
   @ApiProperty({
+    type: String,
+    example: '1234567890',
+  })
+  notificationToken?: string | null;
+
+  @ApiProperty({
     type: () => Status,
   })
   status?: Status;

@@ -27,7 +27,7 @@ import { MongooseConfigService } from './database/mongoose-config.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { CacheConfigService } from './cache/cache-config.service';
 import { FirebaseModule } from './firebase/firebase.module';
-import { NotificationModule } from './notification/notification.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import firebaseConfig from './firebase/config/firebase.config';
 
 @Module({
@@ -91,7 +91,7 @@ import firebaseConfig from './firebase/config/firebase.config';
     MailerModule,
     HomeModule,
     FirebaseModule,
-    NotificationModule,
+    NotificationsModule,
   ],
   providers: [SocketIoGateway, CheckDeviceService],
 })
