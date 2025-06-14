@@ -2,11 +2,31 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
 import { UserEntity } from './infrastructure/persistence/relational/entities/user.entity';
+import { createPointExpression } from '../utils/position';
+import { UpdateUserPositionDto } from './dto/update-user-position.dto';
 
 @Injectable()
 export class UsersCrudService extends TypeOrmCrudService<UserEntity> {
   constructor(@InjectRepository(UserEntity) repo) {
     super(repo);
+  }
+
+  async updatePosition(
+    id: number,
+    dto: UpdateUserPositionDto,
+  ): Promise<UserEntity> {
+    const longitude = dto.longitude;
+    const latitude = dto.latitude;
+
+    return this.repo
+      .createQueryBuilder()
+      .update(UserEntity)
+      .set({
+        position: () => createPointExpression(longitude, latitude),
+      })
+      .where('id = :id', { id })
+      .execute()
+      .then(() => this.repo.findOneByOrFail({ id }));
   }
 
   async fullTextSearch({

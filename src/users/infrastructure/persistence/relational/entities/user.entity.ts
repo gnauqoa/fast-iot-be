@@ -18,6 +18,7 @@ import { AuthProvidersEnum } from '../../../../../auth/auth-providers.enum';
 import { EntityRelationalHelper } from '../../../../../utils/relational-entity-helper';
 import { Exclude, Expose } from 'class-transformer';
 import { DeviceStatus } from '../../../../../devices/domain/device-status.enum';
+import { PostGISPoint } from '../../../../../database/types/postgis.types';
 
 @Entity({
   name: 'user',
@@ -71,6 +72,13 @@ export class UserEntity extends EntityRelationalHelper {
 
   @Column({ type: 'int', default: DeviceStatus.OFFLINE })
   statusId?: number;
+
+  @Column('geometry', {
+    spatialFeatureType: 'Point',
+    srid: 4326,
+    nullable: true,
+  })
+  position?: PostGISPoint;
 
   @Expose()
   get fullName(): string {

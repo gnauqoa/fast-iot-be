@@ -19,4 +19,16 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @ApiPropertyOptional({ type: String })
   @IsOptional()
   firebaseToken?: string | null;
+
+  @ApiPropertyOptional({
+    type: () => ({
+      latitude: { type: 'number' },
+      longitude: { type: 'number' },
+    }),
+  })
+  @IsOptional()
+  position?: {
+    latitude: number;
+    longitude: number;
+  };
 }

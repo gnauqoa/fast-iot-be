@@ -1,4 +1,4 @@
-import { Controller, UseGuards } from '@nestjs/common';
+import { Body, Controller, Patch, Request, UseGuards } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -15,6 +15,7 @@ import {
 } from '@dataui/crud';
 import { UserEntity } from './infrastructure/persistence/relational/entities/user.entity';
 import { UsersCrudService } from './users-crud.service';
+import { UpdateUserPositionDto } from './dto/update-user-position.dto';
 
 @ApiBearerAuth()
 @Roles(RoleEnum.admin)
@@ -75,5 +76,10 @@ export class UsersController implements CrudController<UserEntity> {
       page: req.parsed.page,
       limit: req.parsed.limit,
     });
+  }
+
+  @Patch('position')
+  async updateUserPosition(@Request() req, @Body() dto: UpdateUserPositionDto) {
+    return this.service.updatePosition(req.user.id, dto);
   }
 }
