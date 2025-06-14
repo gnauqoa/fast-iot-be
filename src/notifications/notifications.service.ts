@@ -46,8 +46,8 @@ export class NotificationsService {
 
   async create(createnotificationDto: CreateNotificationDto) {
     const user = await this.userService.findById(createnotificationDto.userId);
-    if (user?.notificationToken)
-      await this.fireBaseService.sendNotification(user.notificationToken, {
+    if (user?.firebaseToken)
+      await this.fireBaseService.sendNotification(user.firebaseToken, {
         notification: {
           title: createnotificationDto.title,
           body: createnotificationDto.body,

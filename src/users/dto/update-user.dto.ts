@@ -18,5 +18,5 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
 
   @ApiPropertyOptional({ type: String })
   @IsOptional()
-  notificationToken?: string | null;
+  firebaseToken?: string | null;
 }

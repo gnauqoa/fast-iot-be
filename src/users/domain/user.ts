@@ -62,7 +62,7 @@ export class User {
     type: String,
     example: '1234567890',
   })
-  notificationToken?: string | null;
+  firebaseToken?: string | null;
 
   @ApiProperty({
     type: () => Status,

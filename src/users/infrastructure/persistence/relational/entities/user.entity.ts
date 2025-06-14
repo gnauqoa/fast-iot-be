@@ -51,7 +51,7 @@ export class UserEntity extends EntityRelationalHelper {
   lastName: string | null;
 
   @Column({ type: String, nullable: true })
-  notificationToken?: string | null;
+  firebaseToken?: string | null;
 
   @OneToOne(() => FileEntity, {
     eager: true,
