@@ -26,6 +26,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MongooseConfigService } from './database/mongoose-config.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { CacheConfigService } from './cache/cache-config.service';
+import { FirebaseModule } from './firebase/firebase.module';
+import { NotificationModule } from './notification/notification.module';
+import firebaseConfig from './firebase/config/firebase.config';
 
 @Module({
   imports: [
@@ -33,7 +36,14 @@ import { CacheConfigService } from './cache/cache-config.service';
     DevicesModule,
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, authConfig, appConfig, mailConfig, fileConfig],
+      load: [
+        databaseConfig,
+        authConfig,
+        appConfig,
+        mailConfig,
+        fileConfig,
+        firebaseConfig,
+      ],
       envFilePath: ['.env'],
     }),
     TypeOrmModule.forRootAsync({
@@ -42,6 +52,7 @@ import { CacheConfigService } from './cache/cache-config.service';
         return new DataSource(options).initialize();
       },
     }),
+    FirebaseModule,
     MongooseModule.forRootAsync({
       useClass: MongooseConfigService,
     }),
@@ -79,6 +90,8 @@ import { CacheConfigService } from './cache/cache-config.service';
     MailModule,
     MailerModule,
     HomeModule,
+    FirebaseModule,
+    NotificationModule,
   ],
   providers: [SocketIoGateway, CheckDeviceService],
 })
