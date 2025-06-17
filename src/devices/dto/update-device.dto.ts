@@ -8,20 +8,13 @@ export class UpdateDeviceDto extends PartialType(CreateDeviceDto) {}
 
 export class ChannelUpdateDto {
   @IsString()
-  channelName: string;
+  name: string;
 
-  channelValue: ChannelValueType;
+  value: ChannelValueType;
 }
 
 export class UpdateDevicePinDto {
   id: number;
-
-  @IsString()
-  @IsOptional()
-  channelName?: string;
-
-  @IsOptional()
-  channelValue?: ChannelValueType;
 
   @IsArray()
   @ValidateNested({ each: true })
