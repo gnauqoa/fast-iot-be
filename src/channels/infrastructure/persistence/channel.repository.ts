@@ -6,6 +6,11 @@ import { ChannelValueType } from './document/entities/channel.schema';
 
 export abstract class ChannelRepository {
   abstract getDeviceChannels(deviceId: number): Promise<Channel[]>;
+  abstract bulkUpdateDeviceChannels(
+    deviceId: number,
+    templateId: string,
+    channels: { name: string; value: ChannelValueType }[],
+  ): Promise<Channel[]>;
   abstract updateDeviceChannel(
     deviceId: number,
     templateId: string,

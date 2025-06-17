@@ -11,21 +11,12 @@ import { TypeOrmCrudService } from '@dataui/crud-typeorm';
 import { info } from 'ps-logger';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { ChannelValueType } from '../channels/infrastructure/persistence/document/entities/channel.schema';
-
-// Domain imports
 import { DeviceStatus, DeviceStatusStr } from './domain/device-status.enum';
 import { DeviceRole } from './domain/device-role.enum';
-
-// Entity imports
 import { DeviceEntity } from './infrastructure/persistence/relational/entities/device.entity';
-
-// Service imports
 import { MqttService } from '../mqtt/mqtt.service';
 import { SocketIoGateway } from '../socket-io/socket-io.gateway';
 import { ChannelRepository } from '../channels/infrastructure/persistence/channel.repository';
-
-// DTO imports
 import {
   UpdateDevicePinDto,
   UpdateDeviceSensorDto,
@@ -184,13 +175,8 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
    * @returns Updated device channel information
    */
   async socketUpdate(id: number, payload: UpdateDevicePinDto) {
-    if (
-      (!payload.channelName || payload.channelValue === undefined) &&
-      !payload.channels?.length
-    ) {
-      throw new BadRequestException(
-        'Either channel name and value or channels array are required for update',
-      );
+    if (!payload.channels?.length) {
+      throw new BadRequestException('Channels array is required for update');
     }
 
     // Get current device data
@@ -200,87 +186,27 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       throw new BadRequestException('Device not found');
     }
 
-    // Handle single channel update
-    if (payload.channelName && payload.channelValue !== undefined) {
-      await this.validateChannelValue(
-        [{ name: payload.channelName, value: payload.channelValue }],
-        deviceData.templateId,
-      );
-
-      const channel = await this.channelRepository.updateDeviceChannel(
+    const updatedChannels =
+      await this.channelRepository.bulkUpdateDeviceChannels(
         id,
         deviceData.templateId,
-        payload.channelName,
-        payload.channelValue,
+        payload.channels,
       );
 
-      // Update channels in device data
-      const updatedChannels = deviceData.channels?.find(
-        (c) => c.name === channel.name,
-      )
-        ? deviceData.channels.map((c) =>
-            c.name === channel.name ? channel : c,
-          )
-        : [...(deviceData?.channels || []), channel];
+    await this.updateDeviceCache(id, {
+      channels: updatedChannels,
+    });
 
-      // Update cache with new channel data
-      await this.updateDeviceCache(id, { channels: updatedChannels });
+    this.notifyClients(id, { id, channels: updatedChannels });
+    this.mqttService.publicMessage(
+      `device/${id}`,
+      updatedChannels.map((ch) => ({
+        name: ch.name,
+        value: ch.value,
+      })),
+    );
 
-      this.notifyClients(id, { id, channels: updatedChannels });
-      this.mqttService.publicMessage(`device/${id}`, {
-        name: channel.name,
-        value: channel.value,
-      });
-
-      return updatedChannels;
-    }
-
-    // Handle multiple channel updates
-    if (payload.channels?.length) {
-      const channelUpdates = payload.channels.map((ch) => ({
-        name: ch.channelName,
-        value: ch.channelValue,
-      }));
-
-      await this.validateChannelValue(channelUpdates, deviceData.templateId);
-
-      const updatedChannels = [...(deviceData.channels || [])];
-      const mqttUpdates: Array<{ name: string; value: ChannelValueType }> = [];
-
-      for (const channelUpdate of payload.channels) {
-        const channel = await this.channelRepository.updateDeviceChannel(
-          id,
-          deviceData.templateId,
-          channelUpdate.channelName,
-          channelUpdate.channelValue,
-        );
-
-        const existingChannelIndex = updatedChannels.findIndex(
-          (c) => c.name === channel.name,
-        );
-
-        if (existingChannelIndex !== -1) {
-          updatedChannels[existingChannelIndex] = channel;
-        } else {
-          updatedChannels.push(channel);
-        }
-
-        mqttUpdates.push({
-          name: channel.name,
-          value: channel.value,
-        });
-      }
-
-      // Update cache with new channel data
-      await this.updateDeviceCache(id, { channels: updatedChannels });
-
-      this.notifyClients(id, { id, channels: updatedChannels });
-      this.mqttService.publicMessage(`device/${id}`, mqttUpdates);
-
-      return updatedChannels;
-    }
-
-    return deviceData.channels;
+    return payload.channels;
   }
 
   /**
@@ -296,69 +222,24 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       await queryRunner.connect();
       await queryRunner.startTransaction();
 
-      // Update device status and position
       await this.updateDeviceStatusAndPosition(queryRunner, id, deviceData);
 
       // Get updated device data
       const updatedDevice = await this.getDeviceDataFromCache(id);
+
       if (!updatedDevice) {
         throw new NotFoundException('Device not found');
       }
 
       let finalDeviceData = { ...updatedDevice };
-
-      // Handle single channel update
-      if (deviceData.channelName && deviceData.channelValue !== undefined) {
-        await this.validateChannelValue(
-          [
-            {
-              name: deviceData.channelName,
-              value: deviceData.channelValue,
-            },
-          ],
-          updatedDevice.templateId,
-        );
-
-        finalDeviceData = await this.updateDeviceChannel(
-          id,
-          updatedDevice,
-          deviceData.channelName,
-          deviceData.channelValue,
-        );
-      }
-
+      let updatedChannels = updatedDevice.channels || [];
       // Handle multiple channel updates
       if (deviceData.channels?.length) {
-        const channelUpdates = deviceData.channels.map((ch) => ({
-          name: ch.channelName,
-          value: ch.channelValue,
-        }));
-
-        await this.validateChannelValue(
-          channelUpdates,
+        updatedChannels = await this.channelRepository.bulkUpdateDeviceChannels(
+          id,
           updatedDevice.templateId,
+          deviceData.channels,
         );
-
-        const updatedChannels = [...(updatedDevice.channels || [])];
-
-        for (const channelUpdate of deviceData.channels) {
-          const channel = await this.channelRepository.updateDeviceChannel(
-            id,
-            updatedDevice.templateId,
-            channelUpdate.channelName,
-            channelUpdate.channelValue,
-          );
-
-          const existingChannelIndex = updatedChannels.findIndex(
-            (c) => c.name === channel.name,
-          );
-
-          if (existingChannelIndex !== -1) {
-            updatedChannels[existingChannelIndex] = channel;
-          } else {
-            updatedChannels.push(channel);
-          }
-        }
 
         finalDeviceData = Object.assign(new DeviceEntity(), {
           ...updatedDevice,
@@ -373,6 +254,13 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
 
       // Notify clients about the update
       this.notifyClients(id, finalDeviceData);
+      this.mqttService.publicMessage(
+        `device/${id}`,
+        updatedChannels.map((ch) => ({
+          name: ch.name,
+          value: ch.value,
+        })),
+      );
 
       return finalDeviceData;
     } catch (err) {
@@ -381,64 +269,6 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     } finally {
       await queryRunner.release();
     }
-  }
-
-  private async validateChannelValue(
-    channels: { name: string; value: any }[],
-    templateId: string,
-  ) {
-    const template = await this.templateService.findById(templateId);
-
-    const templateChannelMapped = template.channels.reduce((acc, channel) => {
-      acc[channel.name] = channel;
-      return acc;
-    }, {});
-
-    for (const channel of channels) {
-      if (!templateChannelMapped[channel.name]) {
-        throw new BadRequestException(
-          `Channel ${channel.name} not found in template`,
-        );
-      }
-
-      if (templateChannelMapped[channel.name].type === 'select') {
-        if (
-          !templateChannelMapped[channel.name].options.find(
-            (option) => option.value === channel.value,
-          )
-        ) {
-          throw new BadRequestException(
-            `Channel ${channel.name} value ${channel.value} not found in template`,
-          );
-        }
-      }
-
-      if (templateChannelMapped[channel.name].type === 'number') {
-        if (typeof channel.value !== 'number') {
-          throw new BadRequestException(
-            `Channel ${channel.name} value ${channel.value} is not a number`,
-          );
-        }
-      }
-
-      if (templateChannelMapped[channel.name].type === 'string') {
-        if (typeof channel.value !== 'string') {
-          throw new BadRequestException(
-            `Channel ${channel.name} value ${channel.value} is not a string`,
-          );
-        }
-      }
-
-      if (templateChannelMapped[channel.name].type === 'boolean') {
-        if (typeof channel.value !== 'boolean') {
-          throw new BadRequestException(
-            `Channel ${channel.name} value ${channel.value} is not a boolean`,
-          );
-        }
-      }
-    }
-
-    return true;
   }
 
   /**
