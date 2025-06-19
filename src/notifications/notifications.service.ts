@@ -2,6 +2,7 @@ import {
   // common
   Injectable,
   Inject,
+  NotFoundException,
 } from '@nestjs/common';
 import { CreateNotificationDto } from './dto/create-Notification.dto';
 import { UpdatenotificationDto } from './dto/update-Notification.dto';
@@ -12,6 +13,7 @@ import { FirebaseService } from '../firebase/firebase.service';
 import { UsersService } from '../users/users.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { SocketIoGateway } from '../socket-io/socket-io.gateway';
 
 @Injectable()
 export class NotificationsService {
@@ -22,6 +24,7 @@ export class NotificationsService {
     private readonly notificationRepository: NotificationRepository,
     private readonly fireBaseService: FirebaseService,
     private readonly userService: UsersService,
+    private readonly socketIoGateWay: SocketIoGateway,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
@@ -46,13 +49,15 @@ export class NotificationsService {
 
   async create(createnotificationDto: CreateNotificationDto) {
     const user = await this.userService.findById(createnotificationDto.userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
     if (user?.firebaseToken)
       await this.fireBaseService.sendNotification({
         token: user.firebaseToken,
         title: createnotificationDto.title,
         body: createnotificationDto.body,
         data: {
-          type: 'notification',
           payload: JSON.parse(createnotificationDto.data),
         },
       });
@@ -64,6 +69,12 @@ export class NotificationsService {
       userId: createnotificationDto.userId,
       isRead: false,
     });
+
+    await this.socketIoGateWay.sendNotification(user.id.toString(), {
+      type: 'notification',
+      payload: result,
+    });
+
     await this.invalidateUnreadCache(createnotificationDto.userId);
     return result;
   }
@@ -118,11 +129,10 @@ export class NotificationsService {
     return this.notificationRepository.update(id, { isRead: true });
   }
 
-  async bulkUpdateIsRead(ids: string[], userId: number) {
+  async updateIsReadAll(userId: number) {
     await this.invalidateUnreadCache(userId);
     return this.notificationRepository.bulkUpdate(
       {
-        _id: { $in: ids },
         userId,
       },
       {
