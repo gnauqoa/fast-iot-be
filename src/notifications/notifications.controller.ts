@@ -87,8 +87,8 @@ export class notificationsController {
     return this.NotificationsService.updateIsRead(id);
   }
 
-  @Patch('bulk-read')
-  async bulkMarkAsRead(@Request() req, @Body() body: BulkMarkAsReadDto) {
-    return this.NotificationsService.bulkUpdateIsRead(body.ids, req.user.id);
+  @Patch('read')
+  async markAsReadAll(@Request() req) {
+    return this.NotificationsService.updateIsReadAll(req.user.id.toString());
   }
 }

@@ -3,7 +3,6 @@ import { Injectable } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 
 export interface NotificationData {
-  type: string;
   payload: Record<string, any>;
 }
 
@@ -22,7 +21,6 @@ export class FirebaseService {
   }): Promise<string> {
     const message: admin.messaging.Message = {
       data: {
-        type: data.type,
         payload: JSON.stringify(data.payload),
       },
       android: {

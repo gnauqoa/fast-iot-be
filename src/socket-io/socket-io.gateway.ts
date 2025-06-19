@@ -13,6 +13,9 @@ import { WsAuthGuard } from './ws.guard';
 import { info, error } from 'ps-logger';
 import { DevicesService } from '../devices/devices.service';
 import { WsDeviceGuard } from './ws-device.guard';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { UsersCrudService } from '../users/users-crud.service';
 
 @Injectable()
 @WebSocketGateway({ cors: { origin: '*' } })
@@ -25,14 +28,29 @@ export class SocketIoGateway
   constructor(
     @Inject(forwardRef(() => DevicesService))
     private readonly deviceService: DevicesService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(forwardRef(() => UsersCrudService))
+    private readonly usersCrudService: UsersCrudService,
   ) {}
 
-  handleConnection(client: Socket) {
+  async handleConnection(client: Socket) {
     info(`Client connected: ${client.id}`);
+    // If user is authenticated, store userId -> channelId mapping
+    const user = client.data?.user;
+    if (user && user.id) {
+      this.saveChannelId(user.id, client.id);
+    }
   }
 
   handleDisconnect(client: Socket) {
     info(`Client disconnected: ${client.id}`);
+  }
+
+  async sendNotification(userId: string, data: any) {
+    const userData = await this.getChannelId(userId);
+    if (userData) {
+      this.server.to(userData.channelId).emit('notification', data);
+    }
   }
 
   @UseGuards(WsAuthGuard, WsDeviceGuard)
@@ -44,6 +62,7 @@ export class SocketIoGateway
     const room = `device/${device_id}`;
     if (!client.rooms.has(room)) {
       await client.join(room);
+      await client.join('notifications');
       client.emit('joined_device_room', room);
       client.emit('device_data', client.data.device);
     }
@@ -95,5 +114,17 @@ export class SocketIoGateway
 
   emitToRoom(room: string, event: string, data: any) {
     this.server.to(room).emit(event, data);
+  }
+
+  saveChannelId(userId: string, channelId: string) {
+    this.cacheManager.set(`user:channel:${userId}`, { channelId });
+  }
+
+  async getChannelId(userId: string): Promise<{ channelId: string } | null> {
+    return await this.cacheManager.get(`user:channel:${userId}`);
+  }
+
+  removeChannelId(userId: string) {
+    this.cacheManager.del(`user:channel:${userId}`);
   }
 }
