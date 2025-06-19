@@ -91,8 +91,21 @@ export class ChannelDocumentRepository implements ChannelRepository {
     deviceId: number,
     templateId: string,
     channels: { name: string; value: ChannelValueType }[],
-  ): Promise<Channel[]> {
+  ): Promise<{ data: Channel[]; isAccident: boolean }> {
     await this.validateChannelValue(channels, templateId);
+    const previousChannels = await this.channelModel.find({
+      deviceId,
+      name: { $in: channels.map((c) => c.name) },
+    });
+    let isAccident = false;
+    const newStatus = channels.find((c) => c.name === 'status')?.value;
+    if (
+      newStatus === 'accident' &&
+      previousChannels.find((c) => c.name === 'status')?.value !== 'accident'
+    ) {
+      isAccident = true;
+    }
+
     await this.channelModel.bulkWrite(
       channels.map((channel) => ({
         updateOne: {
@@ -110,10 +123,15 @@ export class ChannelDocumentRepository implements ChannelRepository {
       })),
     );
 
-    return this.channelModel.find({
+    const data = await this.channelModel.find({
       deviceId,
       name: { $in: channels.map((c) => c.name) },
     });
+
+    return {
+      data: data.map((doc) => ChannelMapper.toDomain(doc)),
+      isAccident,
+    };
   }
 
   async updateDeviceChannel(

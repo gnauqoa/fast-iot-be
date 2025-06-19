@@ -85,6 +85,9 @@ export class UserEntity extends EntityRelationalHelper {
     return [this.firstName, this.lastName].filter(Boolean).join(' ');
   }
 
+  @Column({ type: 'timestamp', nullable: true })
+  positionUpdatedAt?: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 

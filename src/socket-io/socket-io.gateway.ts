@@ -38,7 +38,7 @@ export class SocketIoGateway
     // If user is authenticated, store userId -> channelId mapping
     const user = client.data?.user;
     if (user && user.id) {
-      this.saveChannelId(user.id, client.id);
+      await this.saveChannelId(user.id, client.id);
     }
   }
 
@@ -77,7 +77,20 @@ export class SocketIoGateway
     const room = `device/${device_id}`;
     if (client.rooms.has(room)) {
       await client.leave(room);
+      await client.leave('notifications');
       client.emit('leaved_device_room', room);
+    }
+  }
+
+  @UseGuards(WsAuthGuard, WsDeviceGuard)
+  @SubscribeMessage('user/position')
+  async onNewPosition(
+    @MessageBody() data: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = client.data?.user;
+    if (user && user.id) {
+      await this.usersCrudService.updatePosition(user.id, data);
     }
   }
 
@@ -116,15 +129,15 @@ export class SocketIoGateway
     this.server.to(room).emit(event, data);
   }
 
-  saveChannelId(userId: string, channelId: string) {
-    this.cacheManager.set(`user:channel:${userId}`, { channelId });
+  async saveChannelId(userId: string, channelId: string) {
+    await this.cacheManager.set(`user:channel:${userId}`, { channelId });
   }
 
   async getChannelId(userId: string): Promise<{ channelId: string } | null> {
     return await this.cacheManager.get(`user:channel:${userId}`);
   }
 
-  removeChannelId(userId: string) {
-    this.cacheManager.del(`user:channel:${userId}`);
+  async removeChannelId(userId: string) {
+    await this.cacheManager.del(`user:channel:${userId}`);
   }
 }

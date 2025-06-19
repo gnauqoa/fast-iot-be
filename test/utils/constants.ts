@@ -7,3 +7,4 @@ export const MAIL_HOST = process.env.MAIL_HOST;
 export const MAIL_PORT = process.env.MAIL_CLIENT_PORT;
 export const METERS_PER_DEGREE = 111320; // Approximate meters per degree at the equator
 export const SRID = 4326; // Spatial Reference ID (WGS 84)
+export const POSITION_UPDATED_AT_THRESHOLD = 1000 * 60 * 5; // 5 minutes

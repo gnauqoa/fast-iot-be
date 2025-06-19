@@ -24,8 +24,13 @@ import {
 import { ScanDevicesDto } from './dto/scan-devices.dto';
 import { createPaginatedResult } from '../utils/pagination';
 import { createPointExpression } from '../utils/position';
-import { METERS_PER_DEGREE } from '../../test/utils/constants';
+import {
+  METERS_PER_DEGREE,
+  POSITION_UPDATED_AT_THRESHOLD,
+} from '../../test/utils/constants';
 import { TemplatesService } from '../templates/templates.service';
+import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
+import { FirebaseService } from '../firebase/firebase.service';
 
 /**
  * Service for handling device operations including geographic scanning,
@@ -40,6 +45,8 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
 
   constructor(
     @InjectRepository(DeviceEntity) repo: Repository<DeviceEntity>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
     @Inject(forwardRef(() => MqttService))
     private readonly mqttService: MqttService,
     @Inject(forwardRef(() => SocketIoGateway))
@@ -47,6 +54,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     private readonly channelRepository: ChannelRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly templateService: TemplatesService,
+    private readonly firebaseService: FirebaseService,
   ) {
     super(repo);
   }
@@ -62,6 +70,54 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       ...device,
       template,
     });
+  }
+
+  private async onDeviceAccident(device: DeviceEntity) {
+    const nearbyClient = await this.scanNearbyUsers({
+      latitude: device.position.y,
+      longitude: device.position.x,
+      radius: 5000,
+    });
+
+    for (const client of nearbyClient) {
+      const clientData = await this.socketIoGateway.getChannelId(
+        client.id.toString(),
+      );
+      if (clientData?.channelId) {
+        this.socketIoGateway.emitToClient(
+          client.id.toString(),
+          'device/accident',
+          {
+            position: {
+              latitude: device.position?.y,
+              longitude: device.position?.x,
+            },
+            deviceId: device.id,
+            deviceName: device.name,
+            deviceStatus: device.status,
+            deviceLastUpdate: device.lastUpdate,
+          },
+        );
+      }
+
+      if (client.firebaseToken) {
+        await this.firebaseService.sendNotification({
+          token: client.firebaseToken,
+          title: 'Device got accident',
+          body: 'Someone need your help',
+          data: {
+            payload: {
+              deviceId: device.id,
+              latitude: device.position?.y,
+              longitude: device.position?.x,
+              deviceName: device.name,
+              deviceStatus: device.status,
+              deviceLastUpdate: device.lastUpdate,
+            },
+          },
+        });
+      }
+    }
   }
 
   /**
@@ -155,6 +211,32 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     return createPaginatedResult(devices, total, page, limit);
   }
 
+  async scanNearbyUsers({
+    latitude,
+    longitude,
+    radius,
+  }: {
+    latitude: number;
+    longitude: number;
+    radius: number; // in meters
+  }) {
+    const radiusInDegrees = radius / METERS_PER_DEGREE;
+    const point = createPointExpression(longitude, latitude);
+
+    const baseQuery = this.userRepository
+      .createQueryBuilder('user')
+      .where(`ST_DWithin(user.position, ${point}, :radius)`, {
+        radius: radiusInDegrees,
+      })
+      .andWhere('user.positionUpdatedAt > :updatedAt', {
+        updatedAt: new Date(
+          Date.now() - 1000 * 60 * POSITION_UPDATED_AT_THRESHOLD,
+        ),
+      });
+
+    return await baseQuery.getMany();
+  }
+
   /**
    * Notifies clients about device updates via WebSocket
    * @param deviceId - ID of the device
@@ -186,21 +268,20 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       throw new BadRequestException('Device not found');
     }
 
-    const updatedChannels =
-      await this.channelRepository.bulkUpdateDeviceChannels(
-        id,
-        deviceData.templateId,
-        payload.channels,
-      );
+    const result = await this.channelRepository.bulkUpdateDeviceChannels(
+      id,
+      deviceData.templateId,
+      payload.channels,
+    );
 
     await this.updateDeviceCache(id, {
-      channels: updatedChannels,
+      channels: result.data,
     });
 
-    this.notifyClients(id, { id, channels: updatedChannels });
+    this.notifyClients(id, { id, channels: result.data });
     this.mqttService.publicMessage(
       `device/${id}`,
-      updatedChannels.map((ch) => ({
+      result.data.map((ch) => ({
         name: ch.name,
         value: ch.value,
       })),
@@ -224,7 +305,6 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
 
       await this.updateDeviceStatusAndPosition(queryRunner, id, deviceData);
 
-      // Get updated device data
       const updatedDevice = await this.getDeviceDataFromCache(id);
 
       if (!updatedDevice) {
@@ -235,11 +315,13 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       let updatedChannels = updatedDevice.channels || [];
       // Handle multiple channel updates
       if (deviceData.channels?.length) {
-        updatedChannels = await this.channelRepository.bulkUpdateDeviceChannels(
+        const result = await this.channelRepository.bulkUpdateDeviceChannels(
           id,
           updatedDevice.templateId,
           deviceData.channels,
         );
+
+        updatedChannels = result.data;
 
         finalDeviceData = Object.assign(new DeviceEntity(), {
           ...updatedDevice,
@@ -247,6 +329,10 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
         });
 
         await this.updateDeviceCache(id, finalDeviceData);
+
+        if (result.isAccident) {
+          await this.onDeviceAccident(finalDeviceData as DeviceEntity);
+        }
       }
 
       await queryRunner.commitTransaction();
@@ -280,6 +366,11 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     id: number,
     deviceData: UpdateDeviceSensorDto,
   ): Promise<void> {
+    const device = await this.getDeviceDataFromCache(id);
+    if (!device) {
+      throw new NotFoundException('Device not found');
+    }
+
     const updateData: Partial<DeviceEntity> = {
       status: DeviceStatusStr.ONLINE,
       lastUpdate: new Date(),

@@ -10,7 +10,7 @@ export abstract class ChannelRepository {
     deviceId: number,
     templateId: string,
     channels: { name: string; value: ChannelValueType }[],
-  ): Promise<Channel[]>;
+  ): Promise<{ data: Channel[]; isAccident: boolean }>;
   abstract updateDeviceChannel(
     deviceId: number,
     templateId: string,

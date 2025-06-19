@@ -18,15 +18,17 @@ export class UsersCrudService extends TypeOrmCrudService<UserEntity> {
     const longitude = dto.longitude;
     const latitude = dto.latitude;
 
-    return this.repo
+    const user = await this.repo
       .createQueryBuilder()
       .update(UserEntity)
       .set({
         position: () => createPointExpression(longitude, latitude),
+        positionUpdatedAt: new Date(),
       })
       .where('id = :id', { id })
       .execute()
       .then(() => this.repo.findOneByOrFail({ id }));
+    return user;
   }
 
   async fullTextSearch({

@@ -9,10 +9,11 @@ import { MqttModule } from '../mqtt/mqtt.module';
 import { SocketIoModule } from '../socket-io/socket-io.module';
 import { ChannelsModule } from '../channels/channels.module';
 import { TemplatesModule } from '../templates/templates.module';
+import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([DeviceEntity]),
+    TypeOrmModule.forFeature([DeviceEntity, UserEntity]),
     TemplatesModule,
     AuthModule,
     UsersModule,

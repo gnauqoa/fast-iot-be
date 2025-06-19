@@ -1,10 +1,5 @@
-import {
-  // common
-  Module,
-} from '@nestjs/common';
-
+import { Module } from '@nestjs/common';
 import { UsersController } from './users.controller';
-
 import { UsersService } from './users.service';
 import { RelationalUserPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
 import { FilesModule } from '../files/files.module';
@@ -22,6 +17,6 @@ const infrastructurePersistenceModule = RelationalUserPersistenceModule;
   ],
   controllers: [UsersController],
   providers: [UsersService, UsersCrudService],
-  exports: [UsersService, infrastructurePersistenceModule],
+  exports: [UsersService, infrastructurePersistenceModule, UsersCrudService],
 })
 export class UsersModule {}
