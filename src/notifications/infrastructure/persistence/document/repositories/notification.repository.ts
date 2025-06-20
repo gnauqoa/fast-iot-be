@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
-import { Notifications } from '../entities/Notification.schema';
-import { NotificationRepository } from '../../Notification.repository';
-import { Notification } from '../../../../domain/Notification';
-import { notificationMapper } from '../mappers/Notification.mapper';
+import { Notifications } from '../entities/notification.schema';
+import { NotificationRepository } from '../../notification.repository';
+import { Notification } from '../../../../domain/notification';
+import { notificationMapper } from '../mappers/notification.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 
 @Injectable()

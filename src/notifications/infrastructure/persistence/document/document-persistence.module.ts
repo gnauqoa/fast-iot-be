@@ -3,9 +3,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import {
   notificationSchema,
   Notifications,
-} from './entities/Notification.schema';
-import { NotificationRepository } from '../Notification.repository';
-import { NotificationDocumentRepository } from './repositories/Notification.repository';
+} from './entities/notification.schema';
+import { NotificationRepository } from '../notification.repository';
+import { NotificationDocumentRepository } from './repositories/notification.repository';
 
 @Module({
   imports: [
