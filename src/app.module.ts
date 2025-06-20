@@ -19,8 +19,6 @@ import { AllConfigType } from './config/config.type';
 import { SessionModule } from './session/session.module';
 import { MailerModule } from './mailer/mailer.module';
 import { DevicesModule } from './devices/devices.module';
-import { SocketIoGateway } from './socket-io/socket-io.gateway';
-import { CheckDeviceService } from './cron/check-device.service';
 import { TemplatesModule } from './templates/templates.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { MongooseConfigService } from './database/mongoose-config.service';
@@ -29,6 +27,8 @@ import { CacheConfigService } from './cache/cache-config.service';
 import { FirebaseModule } from './firebase/firebase.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import firebaseConfig from './firebase/config/firebase.config';
+import { SocketIoModule } from './socket-io/socket-io.module';
+import { CheckDeviceService } from './cron/check-device.service';
 
 @Module({
   imports: [
@@ -92,7 +92,8 @@ import firebaseConfig from './firebase/config/firebase.config';
     HomeModule,
     FirebaseModule,
     NotificationsModule,
+    SocketIoModule,
   ],
-  providers: [SocketIoGateway, CheckDeviceService],
+  providers: [CheckDeviceService],
 })
 export class AppModule {}
