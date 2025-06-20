@@ -1,7 +1,5 @@
 export interface Point {
-  x: number;
-  y: number;
-  srid?: number;
+  coordinates: number[];
 }
 
 export interface Geometry {

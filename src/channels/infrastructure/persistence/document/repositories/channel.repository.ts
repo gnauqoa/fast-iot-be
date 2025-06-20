@@ -12,6 +12,10 @@ import { Channel } from '../../../../domain/channel';
 import { ChannelMapper } from '../mappers/channel.mapper';
 import { IPaginationOptions } from '../../../../../utils/types/pagination-options';
 import { TemplatesService } from '../../../../../templates/templates.service';
+import {
+  ACCIDENT_CHANNEL_NAME,
+  STATUS_CHANNEL_OPTIONS,
+} from '../../../../../../test/utils/constants';
 
 @Injectable()
 export class ChannelDocumentRepository implements ChannelRepository {
@@ -98,10 +102,13 @@ export class ChannelDocumentRepository implements ChannelRepository {
       name: { $in: channels.map((c) => c.name) },
     });
     let isAccident = false;
-    const newStatus = channels.find((c) => c.name === 'status')?.value;
+    const newStatus = channels.find(
+      (c) => c.name === ACCIDENT_CHANNEL_NAME,
+    )?.value;
     if (
-      newStatus === 'accident' &&
-      previousChannels.find((c) => c.name === 'status')?.value !== 'accident'
+      newStatus === STATUS_CHANNEL_OPTIONS[0].value &&
+      previousChannels.find((c) => c.name === ACCIDENT_CHANNEL_NAME)?.value !==
+        STATUS_CHANNEL_OPTIONS[0].value
     ) {
       isAccident = true;
     }

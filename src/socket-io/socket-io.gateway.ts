@@ -62,7 +62,6 @@ export class SocketIoGateway
     const room = `device/${device_id}`;
     if (!client.rooms.has(room)) {
       await client.join(room);
-      await client.join('notifications');
       client.emit('joined_device_room', room);
       client.emit('device_data', client.data.device);
     }
@@ -77,7 +76,6 @@ export class SocketIoGateway
     const room = `device/${device_id}`;
     if (client.rooms.has(room)) {
       await client.leave(room);
-      await client.leave('notifications');
       client.emit('leaved_device_room', room);
     }
   }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { IsInt, IsNotEmpty, IsObject, IsString } from 'class-validator';
 
 export class NotificationDto {
   @ApiProperty()
@@ -23,9 +23,9 @@ export class NotificationDto {
   body: string;
 
   @ApiProperty()
-  @IsString()
+  @IsObject()
   @IsNotEmpty()
-  data: string;
+  data: object;
 
   @ApiProperty()
   createdAt: Date;

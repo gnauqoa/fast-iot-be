@@ -7,6 +7,10 @@ import { UserEntity } from '../../../users/infrastructure/persistence/relational
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChannelType } from '../../../templates/domain/enums/channel-type.enum';
+import {
+  ACCIDENT_CHANNEL_NAME,
+  STATUS_CHANNEL_OPTIONS,
+} from '../../../../test/utils/constants';
 
 @Injectable()
 export class TemplateSeedService {
@@ -30,18 +34,9 @@ export class TemplateSeedService {
       updatedAt: faker.date.recent(),
       channels: [
         {
-          name: 'status',
+          name: ACCIDENT_CHANNEL_NAME,
           type: ChannelType.SELECT,
-          options: [
-            {
-              label: 'Accident',
-              value: 'accident',
-            },
-            {
-              label: 'Normal',
-              value: 'normal',
-            },
-          ],
+          options: STATUS_CHANNEL_OPTIONS,
         },
       ],
     };

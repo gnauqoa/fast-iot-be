@@ -58,7 +58,7 @@ export class NotificationsService {
         title: createnotificationDto.title,
         body: createnotificationDto.body,
         data: {
-          payload: JSON.parse(createnotificationDto.data),
+          payload: createnotificationDto.data,
         },
       });
 
@@ -71,7 +71,6 @@ export class NotificationsService {
     });
 
     await this.socketIoGateWay.sendNotification(user.id.toString(), {
-      type: 'notification',
       payload: result,
     });
 

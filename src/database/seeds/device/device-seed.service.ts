@@ -7,7 +7,6 @@ import { ConfigService } from '@nestjs/config';
 import { DeviceRole } from '../../../devices/domain/device-role.enum';
 import { InjectModel } from '@nestjs/mongoose';
 import { Templates } from '../../../templates/infrastructure/persistence/document/entities/template.schema';
-import { ChannelsService } from '../../../channels/channels.service';
 import { TemplateRepository } from '../../../templates/infrastructure/persistence/template.repository';
 import { METERS_PER_DEGREE } from '../../../../test/utils/constants';
 import { faker } from '@faker-js/faker';
@@ -21,7 +20,6 @@ export class DeviceSeedService {
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     @InjectModel(Templates.name)
-    private readonly channelService: ChannelsService,
     private readonly templateRepository: TemplateRepository,
     private readonly configService: ConfigService,
   ) {}
@@ -47,8 +45,8 @@ export class DeviceSeedService {
       .save();
 
     const areaCoordinates = {
-      lat: 10.8080783,
-      lng: 106.7043858,
+      lat: 10.8032855,
+      lng: 106.6661746,
       radius: 10000,
     };
 

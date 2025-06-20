@@ -18,8 +18,8 @@ export class Notifications extends EntityDocumentHelper {
   @Prop({ required: true })
   body: string;
 
-  @Prop({ required: true })
-  data: string;
+  @Prop({ required: true, type: Object })
+  data: object;
 
   @Prop({ required: true })
   userId: number;

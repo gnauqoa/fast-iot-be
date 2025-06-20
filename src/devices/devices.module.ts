@@ -10,6 +10,7 @@ import { SocketIoModule } from '../socket-io/socket-io.module';
 import { ChannelsModule } from '../channels/channels.module';
 import { TemplatesModule } from '../templates/templates.module';
 import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { UserEntity } from '../users/infrastructure/persistence/relational/entit
     AuthModule,
     UsersModule,
     ChannelsModule,
+    NotificationsModule,
     forwardRef(() => MqttModule),
     forwardRef(() => SocketIoModule),
   ],

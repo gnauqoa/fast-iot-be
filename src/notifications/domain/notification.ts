@@ -13,8 +13,8 @@ export class Notification {
   @ApiProperty({ type: String })
   body: string;
 
-  @ApiProperty({ type: String })
-  data: string;
+  @ApiProperty({ type: Object })
+  data: object;
 
   @ApiProperty({ type: Boolean })
   isRead: boolean;

@@ -30,7 +30,7 @@ import {
 } from '../../test/utils/constants';
 import { TemplatesService } from '../templates/templates.service';
 import { UserEntity } from '../users/infrastructure/persistence/relational/entities/user.entity';
-import { FirebaseService } from '../firebase/firebase.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 /**
  * Service for handling device operations including geographic scanning,
@@ -54,7 +54,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     private readonly channelRepository: ChannelRepository,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly templateService: TemplatesService,
-    private readonly firebaseService: FirebaseService,
+    private readonly notificationService: NotificationsService,
   ) {
     super(repo);
   }
@@ -74,49 +74,31 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
 
   private async onDeviceAccident(device: DeviceEntity) {
     const nearbyClient = await this.scanNearbyUsers({
-      latitude: device.position.y,
-      longitude: device.position.x,
-      radius: 5000,
+      longitude: device.position.coordinates[0],
+      latitude: device.position.coordinates[1],
+      radius: 10000,
+    });
+
+    console.log({
+      nearbyClient,
     });
 
     for (const client of nearbyClient) {
-      const clientData = await this.socketIoGateway.getChannelId(
-        client.id.toString(),
-      );
-      if (clientData?.channelId) {
-        this.socketIoGateway.emitToClient(
-          client.id.toString(),
-          'device/accident',
-          {
-            position: {
-              latitude: device.position?.y,
-              longitude: device.position?.x,
-            },
-            deviceId: device.id,
-            deviceName: device.name,
-            deviceStatus: device.status,
-            deviceLastUpdate: device.lastUpdate,
+      await this.notificationService.create({
+        title: 'Device got accident',
+        body: 'Someone need your help',
+        userId: client.id,
+        data: {
+          payload: {
+            id: device.id,
+            name: device.name,
+            position: device.position,
+            status: device.status,
+            lastUpdate: device.lastUpdate,
+            userId: device.userId,
           },
-        );
-      }
-
-      if (client.firebaseToken) {
-        await this.firebaseService.sendNotification({
-          token: client.firebaseToken,
-          title: 'Device got accident',
-          body: 'Someone need your help',
-          data: {
-            payload: {
-              deviceId: device.id,
-              latitude: device.position?.y,
-              longitude: device.position?.x,
-              deviceName: device.name,
-              deviceStatus: device.status,
-              deviceLastUpdate: device.lastUpdate,
-            },
-          },
-        });
-      }
+        },
+      });
     }
   }
 
@@ -273,6 +255,10 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       deviceData.templateId,
       payload.channels,
     );
+
+    if (result.isAccident) {
+      await this.onDeviceAccident(deviceData);
+    }
 
     await this.updateDeviceCache(id, {
       channels: result.data,
