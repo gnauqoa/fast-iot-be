@@ -5,7 +5,6 @@ import {
   UseGuards,
   Query,
   Patch,
-  Body,
   Request,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
@@ -24,7 +23,6 @@ import {
 import { FindAllnotificationsDto } from './dto/find-all-notifications.dto';
 import { infinityPagination } from '../utils/pagination';
 import { NotificationOwnershipGuard } from './notification-ownership.guard';
-import { BulkMarkAsReadDto } from './dto/bulk-mark-as-read.dto';
 
 @ApiTags('Notifications')
 @ApiBearerAuth()

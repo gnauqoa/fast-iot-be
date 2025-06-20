@@ -15,7 +15,6 @@ import { DevicesService } from '../devices/devices.service';
 import { WsDeviceGuard } from './ws-device.guard';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { UsersCrudService } from '../users/users-crud.service';
 
 @Injectable()
 @WebSocketGateway({ cors: { origin: '*' } })
@@ -29,8 +28,6 @@ export class SocketIoGateway
     @Inject(forwardRef(() => DevicesService))
     private readonly deviceService: DevicesService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    @Inject(forwardRef(() => UsersCrudService))
-    private readonly usersCrudService: UsersCrudService,
   ) {}
 
   async handleConnection(client: Socket) {
@@ -38,7 +35,7 @@ export class SocketIoGateway
     // If user is authenticated, store userId -> channelId mapping
     const user = client.data?.user;
     if (user && user.id) {
-      this.saveChannelId(user.id, client.id);
+      await this.saveChannelId(user.id, client.id);
     }
   }
 
@@ -116,15 +113,15 @@ export class SocketIoGateway
     this.server.to(room).emit(event, data);
   }
 
-  saveChannelId(userId: string, channelId: string) {
-    this.cacheManager.set(`user:channel:${userId}`, { channelId });
+  async saveChannelId(userId: string, channelId: string) {
+    await this.cacheManager.set(`user:channel:${userId}`, { channelId });
   }
 
   async getChannelId(userId: string): Promise<{ channelId: string } | null> {
     return await this.cacheManager.get(`user:channel:${userId}`);
   }
 
-  removeChannelId(userId: string) {
-    this.cacheManager.del(`user:channel:${userId}`);
+  async removeChannelId(userId: string) {
+    await this.cacheManager.del(`user:channel:${userId}`);
   }
 }
