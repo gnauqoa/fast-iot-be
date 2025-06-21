@@ -11,7 +11,7 @@ services:
       POSTGRES_DB: ${DATABASE_NAME}
   
   mosquitto:
-    image: quanglng2022/mosquitto-go-auth:latest-amd64
+    image: quanglng2022/mosquitto-go-auth:latest-arm64
     ports:
       - "${MQTT_PORT}:1883"
     volumes:
