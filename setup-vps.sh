@@ -12,21 +12,12 @@ sudo systemctl start docker
 ssh-keygen -t rsa -b 4096 -C "email@gmail.com"
 cd ~/.ssh
 cat id_rsa.pub
-# Setup SSL
-sudo mkdir -p /etc/nginx/ssl
-cd /etc/nginx/ssl
-
-sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout selfsigned.key \
-  -out selfsigned.crt \
-  -subj "/C=VN/ST=HCM/L=HCM/O=QuangDev/OU=Dev/CN=$(curl -s ifconfig.me)"
-
 # Setup Nginx
-sudo vim /etc/nginx/sites-available/nest
-# add ngix config to file
-sudo ln -s /etc/nginx/sites-available/nest /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
+# Use the default Nginx config file
+sudo apt install nginx -y
+sudo systemctl start nginx
+sudo systemctl enable nginx
+sudo systemctl status nginx
 
 # Setup firewall
 sudo ufw allow OpenSSH
@@ -35,11 +26,11 @@ sudo ufw allow 443
 sudo ufw enable
 
 # Run
-git clone https://github.com/gnauqoa/motorbike-rescue-backend
+git clone git@github.com:gnauqoa/motorbike-rescue-backend.git
 cd motorbike-rescue-backend
 cp env.docker.example .env
 ## if not using arm, run this and replace the image name in docker-compose.yaml
-git clone https://github.com/quanglng2022/mosquitto-go-auth.git
+git clone git@github.com:quanglng2022/mosquitto-go-auth.git
 cd mosquitto-go-auth
 docker build -t mosquitto-go-auth .
 cd ../
