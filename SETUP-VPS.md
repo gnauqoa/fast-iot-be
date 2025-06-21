@@ -290,24 +290,7 @@ cd motorbike-rescue-backend
 cp env.docker.example .env
 ```
 
-### Step 2: Setup MQTT Authentication (if using ARM architecture)
-
-If you're not using ARM architecture, build the custom image:
-
-```bash
-# Clone the mosquitto auth repository
-git clone https://github.com/quanglng2022/mosquitto-go-auth.git
-cd mosquitto-go-auth
-
-# Build the Docker image
-docker build -t mosquitto-go-auth .
-cd ../
-
-# Use the alternative docker-compose configuration
-cp docker-compose-2.yaml docker-compose.yaml
-```
-
-### Step 3: Start the Application
+### Step 2: Start the Application
 
 ```bash
 # Start all services with Docker Compose
