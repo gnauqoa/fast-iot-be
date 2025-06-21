@@ -20,24 +20,40 @@ export class UserSeedService {
 
     const salt = await bcrypt.genSalt();
     const password = await bcrypt.hash('secret', salt);
-
-    const admin = await this.repository.save(
-      this.repository.create({
-        firstName: 'Super',
-        lastName: 'Admin',
+    const adminUser = await this.repository.findOne({
+      where: {
         email: 'admin@example.com',
-        password,
-        role: {
-          id: RoleEnum.admin,
-          name: 'Admin',
-        },
-        status: {
-          id: StatusEnum.active,
-          name: 'Active',
-        },
-        positionUpdatedAt: new Date(),
-      }),
-    );
+      },
+    });
+    if (!adminUser) {
+      const admin = await this.repository.save(
+        this.repository.create({
+          firstName: 'Super',
+          lastName: 'Admin',
+          email: 'admin@example.com',
+          password,
+          role: {
+            id: RoleEnum.admin,
+            name: 'Admin',
+          },
+          status: {
+            id: StatusEnum.active,
+            name: 'Active',
+          },
+          positionUpdatedAt: new Date(),
+        }),
+      );
+
+      await this.repository
+        .createQueryBuilder()
+        .update(UserEntity)
+        .set({
+          position: () =>
+            `ST_SetSRID(ST_MakePoint(${adminLongitude}, ${adminLatitude}), 4326)`,
+        })
+        .where('id = :id', { id: admin.id })
+        .execute();
+    }
 
     const countUser = await this.repository.count({
       where: {
@@ -69,15 +85,5 @@ export class UserSeedService {
         }),
       );
     }
-
-    await this.repository
-      .createQueryBuilder()
-      .update(UserEntity)
-      .set({
-        position: () =>
-          `ST_SetSRID(ST_MakePoint(${adminLongitude}, ${adminLatitude}), 4326)`,
-      })
-      .where('id = :id', { id: admin.id })
-      .execute();
   }
 }
