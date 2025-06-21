@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NullableType } from '../../../../../utils/types/nullable.type';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { Templates } from '../entities/template.schema';
 import { TemplateRepository } from '../../template.repository';
 import { Template } from '../../../../domain/template';
@@ -32,17 +32,24 @@ export class TemplateDocumentRepository implements TemplateRepository {
 
   async findAllWithPagination({
     paginationOptions,
+    query,
   }: {
     paginationOptions: IPaginationOptions;
-  }): Promise<Template[]> {
+    query: FilterQuery<Template>;
+  }): Promise<{ data: Template[]; total: number }> {
     const entityObjects = await this.templateModel
-      .find()
+      .find(query)
       .skip((paginationOptions.page - 1) * paginationOptions.limit)
       .limit(paginationOptions.limit);
 
-    return entityObjects.map((entityObject) =>
-      TemplateMapper.toDomain(entityObject),
-    );
+    const total = await this.templateModel.countDocuments(query);
+
+    return {
+      data: entityObjects.map((entityObject) =>
+        TemplateMapper.toDomain(entityObject),
+      ),
+      total,
+    };
   }
 
   async findById(id: Template['id']): Promise<NullableType<Template>> {

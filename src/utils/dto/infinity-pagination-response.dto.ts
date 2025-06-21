@@ -3,7 +3,9 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class InfinityPaginationResponseDto<T> {
   data: T[];
-  hasNextPage: boolean;
+  count: number;
+  total: number;
+  pageCount: number;
 }
 
 export function InfinityPaginationResponse<T>(classReference: Type<T>) {

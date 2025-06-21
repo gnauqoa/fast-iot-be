@@ -36,4 +36,6 @@ export abstract class NotificationRepository {
   abstract remove(id: Notification['id']): Promise<void>;
 
   abstract countUnread(userId: number): Promise<number>;
+
+  abstract count(userId: number): Promise<number>;
 }

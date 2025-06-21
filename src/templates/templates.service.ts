@@ -13,6 +13,7 @@ import { IPrototype, Template } from './domain/template';
 import { DeepPartial } from '../utils/types/deep-partial.type';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { FilterQuery } from 'mongoose';
 
 @Injectable()
 export class TemplatesService {
@@ -74,7 +75,7 @@ export class TemplatesService {
       userId: filterUserId,
     } = findAllTemplatesDto;
 
-    const query: any = {
+    const query: FilterQuery<Template> = {
       deletedAt: null,
     };
 
@@ -99,12 +100,20 @@ export class TemplatesService {
       query.$or = [{ userId }, { public: true }];
     }
 
-    return this.templateRepository.findAllWithPagination({
-      paginationOptions: {
-        page,
-        limit,
+    const { data, total } = await this.templateRepository.findAllWithPagination(
+      {
+        paginationOptions: {
+          page,
+          limit,
+        },
+        query,
       },
-    });
+    );
+
+    return {
+      data,
+      total,
+    };
   }
 
   async findById(id: Template['id']): Promise<Template> {
