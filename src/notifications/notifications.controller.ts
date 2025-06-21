@@ -6,6 +6,7 @@ import {
   Query,
   Patch,
   Request,
+  Delete,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import {
@@ -21,7 +22,6 @@ import {
   InfinityPaginationResponseDto,
 } from '../utils/dto/infinity-pagination-response.dto';
 import { FindAllnotificationsDto } from './dto/find-all-notifications.dto';
-import { infinityPagination } from '../utils/pagination';
 import { NotificationOwnershipGuard } from './notification-ownership.guard';
 
 @ApiTags('Notifications')
@@ -34,6 +34,16 @@ import { NotificationOwnershipGuard } from './notification-ownership.guard';
 export class notificationsController {
   constructor(private readonly NotificationsService: NotificationsService) {}
 
+  @Get('unread')
+  @ApiOkResponse({
+    type: Number,
+  })
+  async getUnreadCount(@Request() req) {
+    return {
+      count: await this.NotificationsService.getUnreadCount(req.user.id),
+    };
+  }
+
   @Get()
   @ApiOkResponse({
     type: InfinityPaginationResponse(Notification),
@@ -41,27 +51,27 @@ export class notificationsController {
   async findAll(
     @Query() query: FindAllnotificationsDto,
     @Request() req,
-  ): Promise<
-    InfinityPaginationResponseDto<Notification> & { unreadCount: number }
-  > {
+  ): Promise<InfinityPaginationResponseDto<Notification>> {
     const page = query?.page ?? 1;
     let limit = query?.limit ?? 10;
     if (limit > 50) {
       limit = 50;
     }
 
+    const { data, total } =
+      await this.NotificationsService.findAllWithPagination({
+        paginationOptions: {
+          page,
+          limit,
+        },
+        userId: req.user.id,
+      });
+
     return {
-      ...infinityPagination(
-        await this.NotificationsService.findAllWithPagination({
-          paginationOptions: {
-            page,
-            limit,
-          },
-          userId: req.user.id,
-        }),
-        { page, limit },
-      ),
-      unreadCount: await this.NotificationsService.getUnreadCount(req.user.id),
+      data,
+      total,
+      count: data.length,
+      pageCount: Math.ceil(total / limit),
     };
   }
 
@@ -88,5 +98,11 @@ export class notificationsController {
   @Patch('read')
   async markAsReadAll(@Request() req) {
     return this.NotificationsService.updateIsReadAll(req.user.id.toString());
+  }
+
+  @Delete(':id')
+  @UseGuards(NotificationOwnershipGuard)
+  async delete(@Param('id') id: string) {
+    return this.NotificationsService.delete(id);
   }
 }

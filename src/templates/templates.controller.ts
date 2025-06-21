@@ -27,7 +27,6 @@ import {
   InfinityPaginationResponseDto,
 } from '../utils/dto/infinity-pagination-response.dto';
 import { FindAllTemplatesDto } from './dto/find-all-templates.dto';
-import { infinityPagination } from '../utils/pagination';
 import { TemplateOwnershipGuard } from './template-ownership.guard';
 
 @ApiTags('Templates')
@@ -62,13 +61,17 @@ export class TemplatesController {
       limit = 50;
     }
 
-    return infinityPagination(
-      await this.templatesService.findAll(
-        { ...query, page, limit },
-        req.user.id,
-      ),
-      { page, limit },
+    const { data, total } = await this.templatesService.findAll(
+      { ...query, page, limit },
+      req.user.id,
     );
+
+    return {
+      data,
+      total,
+      count: data.length,
+      pageCount: Math.ceil(total / limit),
+    };
   }
 
   @Get(':id')

@@ -1,3 +1,4 @@
+import { FilterQuery } from 'mongoose';
 import { DeepPartial } from '../../../utils/types/deep-partial.type';
 import { NullableType } from '../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
@@ -12,9 +13,11 @@ export abstract class TemplateRepository {
 
   abstract findAllWithPagination({
     paginationOptions,
+    query,
   }: {
     paginationOptions: IPaginationOptions;
-  }): Promise<Template[]>;
+    query: FilterQuery<Template>;
+  }): Promise<{ data: Template[]; total: number }>;
 
   abstract findById(id: Template['id']): Promise<NullableType<Template>>;
 

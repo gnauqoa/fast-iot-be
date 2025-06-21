@@ -70,8 +70,7 @@ export class NotificationsService {
       isRead: false,
     });
 
-    await this.socketIoGateWay.sendNotification(user.id.toString(), {
-      type: 'notification',
+    await this.socketIoGateWay.onNewNotification(user.id.toString(), {
       payload: result,
     });
 
@@ -79,20 +78,28 @@ export class NotificationsService {
     return result;
   }
 
-  findAllWithPagination({
+  async findAllWithPagination({
     paginationOptions,
     userId,
   }: {
     paginationOptions: IPaginationOptions;
     userId: number;
   }) {
-    return this.notificationRepository.findAllWithPagination({
-      paginationOptions: {
-        page: paginationOptions.page,
-        limit: paginationOptions.limit,
-      },
-      userId,
-    });
+    const [data, total] = await Promise.all([
+      this.notificationRepository.findAllWithPagination({
+        paginationOptions: {
+          page: paginationOptions.page,
+          limit: paginationOptions.limit,
+        },
+        userId,
+      }),
+      this.notificationRepository.count(userId),
+    ]);
+
+    return {
+      data,
+      total,
+    };
   }
 
   findById(id: Notification['id']) {
@@ -125,13 +132,17 @@ export class NotificationsService {
     const notification = await this.notificationRepository.findById(id);
     if (notification) {
       await this.invalidateUnreadCache(notification.userId);
+      await this.socketIoGateWay.onUpdateNotification(
+        notification.userId.toString(),
+        { payload: notification },
+      );
     }
     return this.notificationRepository.update(id, { isRead: true });
   }
 
   async updateIsReadAll(userId: number) {
     await this.invalidateUnreadCache(userId);
-    return this.notificationRepository.bulkUpdate(
+    const reuslts = await this.notificationRepository.bulkUpdate(
       {
         userId,
       },
@@ -139,5 +150,26 @@ export class NotificationsService {
         isRead: true,
       },
     );
+
+    if (reuslts.length) {
+      await this.socketIoGateWay.onUpdateNotification(userId.toString(), {
+        payload: reuslts,
+      });
+    }
+    return reuslts;
+  }
+
+  async delete(id: string) {
+    const notification = await this.notificationRepository.findById(id);
+    if (notification) {
+      if (!notification.isRead) {
+        await this.invalidateUnreadCache(notification.userId);
+      }
+      await this.socketIoGateWay.onDeleteNotification(
+        notification.userId.toString(),
+        { payload: notification, type: 'deleted' },
+      );
+    }
+    return this.notificationRepository.remove(id);
   }
 }

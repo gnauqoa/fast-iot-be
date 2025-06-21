@@ -30,24 +30,28 @@ export class SocketIoGateway
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async handleConnection(client: Socket) {
+  @UseGuards(WsAuthGuard, WsDeviceGuard)
+  handleConnection(client: Socket) {
     info(`Client connected: ${client.id}`);
-    // If user is authenticated, store userId -> channelId mapping
-    const user = client.data?.user;
-    if (user && user.id) {
-      await this.saveChannelId(user.id, client.id);
-    }
   }
 
   handleDisconnect(client: Socket) {
     info(`Client disconnected: ${client.id}`);
   }
 
-  async sendNotification(userId: string, data: any) {
-    const userData = await this.getChannelId(userId);
-    if (userData) {
-      this.server.to(userData.channelId).emit('notification', data);
-    }
+  onNewNotification(userId: string, data: any) {
+    console.log('onNewNotification', userId, data);
+    this.server.to(`user/${userId}`).emit('notification:created', data);
+  }
+
+  onUpdateNotification(userId: string, data: any) {
+    console.log('onUpdateNotification', userId, data);
+    this.server.to(`user/${userId}`).emit('notification:updated', data);
+  }
+
+  onDeleteNotification(userId: string, data: any) {
+    console.log('onDeleteNotification', userId, data);
+    this.server.to(`user/${userId}`).emit('notification:deleted', data);
   }
 
   @UseGuards(WsAuthGuard, WsDeviceGuard)
@@ -75,6 +79,19 @@ export class SocketIoGateway
     if (client.rooms.has(room)) {
       await client.leave(room);
       client.emit('leaved_device_room', room);
+    }
+  }
+
+  @UseGuards(WsAuthGuard, WsDeviceGuard)
+  @SubscribeMessage('user/position')
+  async onNewPosition(
+    @MessageBody() data: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const user = client.data?.user;
+    if (user && user.id) {
+      console.log('onNewPosition', user.id, client.id, data);
+      await client.join(`user/${user.id}`);
     }
   }
 
@@ -111,17 +128,5 @@ export class SocketIoGateway
 
   emitToRoom(room: string, event: string, data: any) {
     this.server.to(room).emit(event, data);
-  }
-
-  async saveChannelId(userId: string, channelId: string) {
-    await this.cacheManager.set(`user:channel:${userId}`, { channelId });
-  }
-
-  async getChannelId(userId: string): Promise<{ channelId: string } | null> {
-    return await this.cacheManager.get(`user:channel:${userId}`);
-  }
-
-  async removeChannelId(userId: string) {
-    await this.cacheManager.del(`user:channel:${userId}`);
   }
 }

@@ -107,4 +107,8 @@ export class NotificationDocumentRepository implements NotificationRepository {
   async countUnread(userId: number): Promise<number> {
     return this.notificationModel.countDocuments({ userId, isRead: false });
   }
+
+  async count(userId: number): Promise<number> {
+    return this.notificationModel.countDocuments({ userId });
+  }
 }
