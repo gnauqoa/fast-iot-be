@@ -320,6 +320,7 @@ sudo ufw allow 80
 # Allow HTTPS traffic
 sudo ufw allow 443
 
+sudo ufw allow 1883/tcp
 # Enable firewall
 sudo ufw enable
 
