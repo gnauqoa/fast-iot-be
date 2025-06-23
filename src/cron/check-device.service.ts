@@ -5,21 +5,18 @@ import { Repository, In, LessThan } from 'typeorm';
 import { DeviceEntity } from '../devices/infrastructure/persistence/relational/entities/device.entity';
 import dayjs from 'dayjs';
 import { info } from 'console';
-import { SocketIoGateway } from '../socket-io/socket-io.gateway';
-import {
-  DeviceStatus,
-  DeviceStatusStr,
-} from '../devices/domain/device-status.enum';
+import { DeviceStatusStr } from '../devices/domain/device-status.enum';
+import { DevicesService } from '../devices/devices.service';
 
 @Injectable()
 export class CheckDeviceService {
   constructor(
     @InjectRepository(DeviceEntity)
     private readonly deviceRepository: Repository<DeviceEntity>,
-    private readonly socketIoGateway: SocketIoGateway,
+    private readonly deviceService: DevicesService,
   ) {}
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async handleEvery5Minutes() {
     info('Check device task');
 
@@ -40,9 +37,9 @@ export class CheckDeviceService {
       );
 
       for (const device of offlineDevices) {
-        this.socketIoGateway.emitToClients(`device:${device.id}`, {
-          ...device,
-          status: DeviceStatus.OFFLINE,
+        await this.deviceService.mqttUpdate(device.id, {
+          id: device.id,
+          status: DeviceStatusStr.OFFLINE,
         });
       }
     }

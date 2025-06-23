@@ -246,8 +246,13 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       if (!updatedDevice) {
         throw new NotFoundException('Device not found');
       }
-
-      let finalDeviceData = { ...updatedDevice };
+      const status = deviceData.status
+        ? DeviceStatusStr[deviceData.status]
+        : DeviceStatusStr.ONLINE;
+      let finalDeviceData = {
+        ...updatedDevice,
+        status,
+      };
       let updatedChannels = updatedDevice.channels || [];
       // Handle multiple channel updates
       if (deviceData.channels?.length) {
@@ -259,6 +264,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
 
         finalDeviceData = Object.assign(new DeviceEntity(), {
           ...updatedDevice,
+          status,
           channels: updatedChannels,
         });
 
@@ -280,6 +286,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
         userId: finalDeviceData.userId,
         position: finalDeviceData.position,
       };
+
       // Notify clients about the update
       this.notifyClients(id, notifyData);
       this.mqttService.publicMessage(
@@ -309,7 +316,9 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
     deviceData: UpdateDeviceSensorDto,
   ): Promise<void> {
     const updateData: Partial<DeviceEntity> = {
-      status: DeviceStatusStr.ONLINE,
+      status: deviceData.status
+        ? DeviceStatusStr[deviceData.status]
+        : DeviceStatusStr.ONLINE,
       lastUpdate: new Date(),
     };
 

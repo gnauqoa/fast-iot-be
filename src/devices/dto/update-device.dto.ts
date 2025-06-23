@@ -3,6 +3,7 @@ import { CreateDeviceDto } from './create-device.dto';
 import { IsString, IsOptional, IsArray, ValidateNested } from 'class-validator';
 import { ChannelValueType } from '../../channels/infrastructure/persistence/document/entities/channel.schema';
 import { Type } from 'class-transformer';
+import { DeviceStatusStr } from '../domain/device-status.enum';
 
 export class UpdateDeviceDto extends PartialType(CreateDeviceDto) {}
 
@@ -31,4 +32,8 @@ export class UpdateDeviceSensorDto extends UpdateDevicePinDto {
   @IsString()
   @IsOptional()
   longitude?: string;
+
+  @IsString()
+  @IsOptional()
+  status?: DeviceStatusStr;
 }
