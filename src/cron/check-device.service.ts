@@ -19,7 +19,7 @@ export class CheckDeviceService {
     private readonly socketIoGateway: SocketIoGateway,
   ) {}
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async handleEvery5Minutes() {
     info('Check device task');
 

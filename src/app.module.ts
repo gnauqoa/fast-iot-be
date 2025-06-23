@@ -29,6 +29,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import firebaseConfig from './firebase/config/firebase.config';
 import { SocketIoModule } from './socket-io/socket-io.module';
 import { CheckDeviceService } from './cron/check-device.service';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -83,6 +84,7 @@ import { CheckDeviceService } from './cron/check-device.service';
       imports: [ConfigModule],
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     UsersModule,
     FilesModule,
     AuthModule,

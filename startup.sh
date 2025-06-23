@@ -7,8 +7,6 @@ set -e
 /opt/wait-for-it.sh mongo:27017 -t 30
 npm run build
 npm run migration:run
-
-# Only run seed if the seed flag file doesn't exist
 SEED_FLAG_FILE="/usr/src/app/.seed_completed"
 if [ ! -f "$SEED_FLAG_FILE" ]; then
   echo "Running seed for first time setup..."
@@ -18,5 +16,4 @@ if [ ! -f "$SEED_FLAG_FILE" ]; then
 else
   echo "Seed already completed in a previous run. Skipping..."
 fi
-
 npm run prod
