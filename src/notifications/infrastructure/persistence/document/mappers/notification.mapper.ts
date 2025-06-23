@@ -1,5 +1,5 @@
-import { Notification } from '../../../../domain/Notification';
-import { Notifications } from '../entities/Notification.schema';
+import { Notification } from '../../../../domain/notification';
+import { Notifications } from '../entities/notification.schema';
 
 export class notificationMapper {
   public static toDomain(raw: Notifications): Notification {

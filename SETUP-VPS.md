@@ -283,8 +283,8 @@ sudo systemctl reload nginx
 
 ```bash
 # Clone your repository
-git clone https://github.com/gnauqoa/motorbike-rescue-backend
-cd motorbike-rescue-backend
+git clone https://github.com/gnauqoa/fast-iot-be
+cd fast-iot-be
 
 # Copy environment file
 cp env.docker.example .env
@@ -295,15 +295,15 @@ cp env.docker.example .env
 If you are using ARM chip
 
 ```bash
-cp ./docker-compose.arm.yaml ./docker-compose.yaml
+cp ./docker compose.arm.yaml ./docker compose.yaml
 ```
 
 ```bash
 # Start all services with Docker Compose
-docker-compose up --build -d
+docker compose up --build -d
 
 # Check if containers are running
-docker-compose ps
+docker compose ps
 ```
 
 ## Firewall Configuration
@@ -339,7 +339,7 @@ sudo ufw status
 
 2. **Check application containers:**
    ```bash
-   docker-compose logs
+   docker compose logs
    ```
 
 3. **Test HTTP to HTTPS redirect:**
@@ -381,8 +381,8 @@ sudo ufw status
    sudo netstat -tlnp | grep :3000
    
    # Check Docker containers
-   docker-compose ps
-   docker-compose logs
+   docker compose ps
+   docker compose logs
    ```
 
 4. **Firewall blocking connections:**
@@ -420,17 +420,17 @@ sudo certbot renew
 
 ```bash
 # View container logs
-docker-compose logs -f
+docker compose logs -f
 
 # Restart services
-docker-compose restart
+docker compose restart
 
 # Stop all services
-docker-compose down
+docker compose down
 
 # Update and rebuild
-docker-compose pull
-docker-compose up --build -d
+docker compose pull
+docker compose up --build -d
 ```
 
 ### Useful Nginx Commands

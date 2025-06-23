@@ -34,4 +34,4 @@ export class Notifications extends EntityDocumentHelper {
   isRead: boolean;
 }
 
-export const notificationSchema = SchemaFactory.createForClass(Notifications);
+export const NotificationSchema = SchemaFactory.createForClass(Notifications);

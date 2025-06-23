@@ -20,7 +20,7 @@ export class TemplateSeedService {
   private generateTemplate(userId: number) {
     return {
       name:
-        faker.helpers.arrayElement(['Motorbike Rescue']) +
+        faker.helpers.arrayElement(['Fast IoT']) +
         ' Template ' +
         faker.number.int({ min: 1, max: 100 }),
       description: faker.lorem.paragraph(),

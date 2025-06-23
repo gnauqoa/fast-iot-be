@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import {
-  notificationSchema,
+  NotificationSchema,
   Notifications,
-} from './entities/Notification.schema';
-import { NotificationRepository } from '../Notification.repository';
-import { NotificationDocumentRepository } from './repositories/Notification.repository';
+} from './entities/notification.schema';
+import { NotificationRepository } from '../notification.repository';
+import { NotificationDocumentRepository } from './repositories/notification.repository';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Notifications.name, schema: notificationSchema },
+      { name: Notifications.name, schema: NotificationSchema },
     ]),
   ],
   providers: [

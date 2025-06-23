@@ -2,7 +2,7 @@ import { FilterQuery } from 'mongoose';
 import { DeepPartial } from '../../../utils/types/deep-partial.type';
 import { NullableType } from '../../../utils/types/nullable.type';
 import { IPaginationOptions } from '../../../utils/types/pagination-options';
-import { Notification } from '../../domain/Notification';
+import { Notification } from '../../domain/notification';
 
 export abstract class NotificationRepository {
   abstract create(

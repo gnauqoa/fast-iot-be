@@ -2,6 +2,6 @@
 // import { Allow } from 'class-validator';
 
 import { PartialType } from '@nestjs/swagger';
-import { CreateNotificationDto } from './create-Notification.dto';
+import { CreateNotificationDto } from './create-notification.dto';
 
 export class UpdatenotificationDto extends PartialType(CreateNotificationDto) {}

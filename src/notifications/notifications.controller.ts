@@ -15,7 +15,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
-import { Notification } from './domain/Notification';
+import { Notification } from './domain/notification';
 import { AuthGuard } from '@nestjs/passport';
 import {
   InfinityPaginationResponse,

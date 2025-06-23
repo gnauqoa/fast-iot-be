@@ -4,11 +4,11 @@ import {
   Inject,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateNotificationDto } from './dto/create-Notification.dto';
-import { UpdatenotificationDto } from './dto/update-Notification.dto';
-import { NotificationRepository } from './infrastructure/persistence/Notification.repository';
+import { CreateNotificationDto } from './dto/create-notification.dto';
+import { UpdatenotificationDto } from './dto/update-notification.dto';
+import { NotificationRepository } from './infrastructure/persistence/notification.repository';
 import { IPaginationOptions } from '../utils/types/pagination-options';
-import { Notification } from './domain/Notification';
+import { Notification } from './domain/notification';
 import { FirebaseService } from '../firebase/firebase.service';
 import { UsersService } from '../users/users.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
