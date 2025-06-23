@@ -292,6 +292,12 @@ cp env.docker.example .env
 
 ### Step 2: Start the Application
 
+If you are using ARM chip
+
+```bash
+cp ./docker-compose.arm.yaml ./docker-compose.yaml
+```
+
 ```bash
 # Start all services with Docker Compose
 docker-compose up --build -d
@@ -314,6 +320,7 @@ sudo ufw allow 80
 # Allow HTTPS traffic
 sudo ufw allow 443
 
+sudo ufw allow 1883/tcp
 # Enable firewall
 sudo ufw enable
 
