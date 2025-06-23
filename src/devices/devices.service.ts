@@ -8,7 +8,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
-import { info } from 'ps-logger';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { DeviceStatus, DeviceStatusStr } from './domain/device-status.enum';
@@ -104,14 +103,23 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
   private async updateDeviceCache(
     id: number,
     deviceData: Partial<DeviceEntity>,
-  ): Promise<void> {
+  ): Promise<DeviceEntity> {
     const cacheKey = `${this.CACHE_KEY_PREFIX}:${id}`;
     const existingData = await this.getDeviceDataFromCache(id);
 
-    if (existingData) {
-      const updatedData = { ...existingData, ...deviceData };
-      await this.cacheManager.set(cacheKey, updatedData, this.CACHE_TTL);
-    }
+    const updatedData = {
+      ...existingData,
+      channels: Array.from(
+        new Map(
+          [
+            ...(existingData?.channels || []),
+            ...(deviceData.channels || []),
+          ].map((c) => [c.name, c]),
+        ).values(),
+      ),
+    };
+    await this.cacheManager.set(cacheKey, updatedData, this.CACHE_TTL);
+    return updatedData as DeviceEntity;
   }
 
   /**
@@ -193,11 +201,19 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
         payload.channels,
       );
 
-    await this.updateDeviceCache(id, {
+    const updatedDevice = await this.updateDeviceCache(id, {
       channels: updatedChannels,
     });
 
-    this.notifyClients(id, { id, channels: updatedChannels });
+    const notifyData = {
+      id,
+      channels: updatedDevice?.channels,
+      status: deviceData.status,
+      lastUpdate: deviceData.lastUpdate,
+      userId: deviceData.userId,
+      position: deviceData.position,
+    };
+    this.notifyClients(id, notifyData);
     this.mqttService.publicMessage(
       `device/${id}`,
       updatedChannels.map((ch) => ({
@@ -250,10 +266,22 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       }
 
       await queryRunner.commitTransaction();
-      info(`Device updated: ${JSON.stringify(finalDeviceData)}`);
 
+      const updatedDeviceData = await this.updateDeviceCache(
+        id,
+        finalDeviceData,
+      );
+
+      const notifyData = {
+        id: finalDeviceData.id,
+        channels: updatedDeviceData.channels,
+        status: finalDeviceData.status,
+        lastUpdate: finalDeviceData.lastUpdate,
+        userId: finalDeviceData.userId,
+        position: finalDeviceData.position,
+      };
       // Notify clients about the update
-      this.notifyClients(id, finalDeviceData);
+      this.notifyClients(id, notifyData);
       this.mqttService.publicMessage(
         `device/${id}`,
         updatedChannels.map((ch) => ({
