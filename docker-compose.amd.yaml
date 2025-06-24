@@ -52,9 +52,12 @@ services:
       - postgres
       - redis
       - mongo
+    volumes:
+      - fast-iot-api:/app
 
 volumes:
   fast-iot-ps:
   mosquitto_data:
   mosquitto_log:
   fast-iot-mongo:
+  fast-iot-api:
