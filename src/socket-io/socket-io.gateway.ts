@@ -6,6 +6,7 @@ import {
   SubscribeMessage,
   MessageBody,
   ConnectedSocket,
+  WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { forwardRef, Inject, Injectable, UseGuards } from '@nestjs/common';
@@ -13,8 +14,10 @@ import { WsAuthGuard } from './ws.guard';
 import { info, error } from 'ps-logger';
 import { DevicesService } from '../devices/devices.service';
 import { WsDeviceGuard } from './ws-device.guard';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
+import { AllConfigType } from '../config/config.type';
+import { ConfigService } from '@nestjs/config';
+import { JwtPayloadType } from '../auth/strategies/types/jwt-payload.type';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 @WebSocketGateway({ cors: { origin: '*' } })
@@ -27,12 +30,31 @@ export class SocketIoGateway
   constructor(
     @Inject(forwardRef(() => DevicesService))
     private readonly deviceService: DevicesService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService<AllConfigType>,
   ) {}
 
-  @UseGuards(WsAuthGuard, WsDeviceGuard)
-  handleConnection(client: Socket) {
-    info(`Client connected: ${client.id}`);
+  async handleConnection(client: Socket) {
+    try {
+      const token = client.handshake.auth?.token;
+      if (!token) throw new WsException('Missing token');
+
+      const jwtData = await this.jwtService.verifyAsync<JwtPayloadType>(token, {
+        secret: this.configService.getOrThrow('auth.secret', {
+          infer: true,
+        }),
+      });
+      if (!jwtData) throw new WsException('Invalid token');
+
+      client.data.user = jwtData;
+      const room = `user/${jwtData.id}`;
+      await client.join(room);
+      info(`Client ${client.id} joined room: ${room}`);
+    } catch (err) {
+      error(`Client ${client.id} disconnected: ${err.message}`);
+      client.disconnect();
+      return;
+    }
   }
 
   handleDisconnect(client: Socket) {
@@ -63,7 +85,6 @@ export class SocketIoGateway
     const room = `device/${device_id}`;
     if (!client.rooms.has(room)) {
       await client.join(room);
-      await client.join('notifications');
       client.emit('joined_device_room', room);
       client.emit('device_data', client.data.device);
     }
@@ -79,19 +100,6 @@ export class SocketIoGateway
     if (client.rooms.has(room)) {
       await client.leave(room);
       client.emit('leaved_device_room', room);
-    }
-  }
-
-  @UseGuards(WsAuthGuard, WsDeviceGuard)
-  @SubscribeMessage('user/position')
-  async onNewPosition(
-    @MessageBody() data: any,
-    @ConnectedSocket() client: Socket,
-  ) {
-    const user = client.data?.user;
-    if (user && user.id) {
-      console.log('onNewPosition', user.id, client.id, data);
-      await client.join(`user/${user.id}`);
     }
   }
 
