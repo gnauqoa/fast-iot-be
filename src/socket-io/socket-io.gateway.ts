@@ -62,17 +62,14 @@ export class SocketIoGateway
   }
 
   onNewNotification(userId: string, data: any) {
-    console.log('onNewNotification', userId, data);
     this.server.to(`user/${userId}`).emit('notification:created', data);
   }
 
   onUpdateNotification(userId: string, data: any) {
-    console.log('onUpdateNotification', userId, data);
     this.server.to(`user/${userId}`).emit('notification:updated', data);
   }
 
   onDeleteNotification(userId: string, data: any) {
-    console.log('onDeleteNotification', userId, data);
     this.server.to(`user/${userId}`).emit('notification:deleted', data);
   }
 

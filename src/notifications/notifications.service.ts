@@ -70,7 +70,7 @@ export class NotificationsService {
       isRead: false,
     });
 
-    await this.socketIoGateWay.onNewNotification(user.id.toString(), {
+    this.socketIoGateWay.onNewNotification(user.id.toString(), {
       payload: result,
     });
 
