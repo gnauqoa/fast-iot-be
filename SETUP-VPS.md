@@ -59,21 +59,6 @@ sudo systemctl enable docker
 docker --version
 ```
 
-### Step 3: Setup SSH Key for GitHub (Optional)
-
-If you need to clone private repositories:
-
-```bash
-# Generate SSH key (replace with your email)
-ssh-keygen -t rsa -b 4096 -C "your-email@gmail.com"
-
-# Display public key to add to GitHub
-cd ~/.ssh
-cat id_rsa.pub
-```
-
-Copy the output and add it to your GitHub SSH keys in Settings > SSH and GPG keys.
-
 ## SSL Setup - Option A: With Domain Name
 
 Choose this option if you have a domain name pointing to your VPS.
