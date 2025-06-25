@@ -1,4 +1,11 @@
-import { Controller, Get, Request, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Request,
+  UseGuards,
+  Query,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   Crud,
   CrudController,
@@ -216,7 +223,9 @@ export class DevicesController implements CrudController<DeviceEntity> {
     });
 
     const template = await this.templateRepository.findById(device.templateId);
-
+    if (!template) {
+      throw new NotFoundException('Template not found');
+    }
     for (const channel of template?.channels || []) {
       await this.channelService.create({
         deviceId: device.id,
