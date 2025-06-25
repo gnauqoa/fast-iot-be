@@ -1,73 +1,124 @@
-# NestJS REST API boilerplate 🇺🇦
+# FastIoT Backend 🚀
 
-[![image](https://github.com/brocoders/nestjs-boilerplate/assets/72293912/197da43e-02f4-4895-8d3e-b7a42a591c26)](https://github.com/new?template_name=nestjs-boilerplate&template_owner=brocoders)
+## Overview
+FastIoT is an open-source platform designed to simplify and accelerate the development of IoT projects. The backend, built with **NestJS** using the [nestjs-boilerplate](https://github.com/brocoders/nestjs-boilerplate) template, serves as the core of the FastIoT ecosystem. It provides robust APIs, secure data handling, and seamless integration with IoT devices. The platform integrates **PostgreSQL** and **MongoDB** for flexible data storage, **Redis** for caching and real-time data processing, and **Mosquitto** as the MQTT broker for efficient device communication. This repository contains the backend codebase for FastIoT, enabling developers to quickly set up and deploy IoT applications with a single command.
 
-![github action status](https://github.com/brocoders/nestjs-boilerplate/actions/workflows/docker-e2e.yml/badge.svg)
-[![renovate](https://img.shields.io/badge/renovate-enabled-%231A1F6C?logo=renovatebot)](https://app.renovatebot.com/dashboard)
-[![Static Badge](https://img.shields.io/badge/supported_by-brocoders-d91965?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTMwIiBoZWlnaHQ9IjE4NyIgdmlld0JveD0iMCAwIDEzMCAxODciIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI%2BCjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF83NzExXzQ4OTEpIj4KPHBhdGggZD0iTTc1Ljk5NjcgNDUuNzUwNkM2NS4xMDg5IDQ2Ljg2MSA1Ny45MjMgNTguNDA5NyA2Mi4yNzgxIDY4Ljg0OEwxMDguNDQyIDE4N0w3My42MDEzIDE1NS4wMTlIMzQuODQwOUMyMC42ODY4IDE1NS4wMTkgOS4zNjM0OSAxNDMuNDcgOS4zNjM0OSAxMjkuMDM0Vjk0LjYxMDVDOS4zNjM0OSA5Mi4xNjc1IDguNDkyNDYgODkuNzI0NSA2Ljc1MDQyIDg3Ljk0NzdMMCA4MS4wNjNMNi43NTA0MiA3NC4xNzgxQzguNDkyNDYgNzIuNDAxNCA5LjM2MzQ5IDY5Ljk1ODQgOS4zNjM0OSA2Ny41MTU0VjMxLjA5MjZDOS4zNjM0OSAxMy43Njk2IDIzLjA4MjEgMCAzOS44NDkyIDBINTguMTQwN0w3NS45OTY3IDQ1Ljc1MDZaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTI1LjY0NiAxMTIuMzc4Vjk0LjgzMjdDMTI1LjY0NiA5My43MjIyIDEyNi4wODEgOTIuNjExOCAxMjYuOTUyIDkxLjcyMzRMMTMwLjAwMSA4OC4zOTIxTDEyNi45NTIgODUuMDYwN0MxMjYuMDgxIDg0LjE3MjQgMTI1LjY0NiA4My4wNjE5IDEyNS42NDYgODEuOTUxNFY2OS43MzY1QzEyNS42NDYgNTYuNDExMSAxMTQuOTc2IDQ1Ljc1MDcgMTAyLjEyOCA0NS43NTA3SDc1Ljk5NzNMMTA1LjYxMiAxMzAuODExQzEwNS42MTIgMTMwLjgxMSAxMTAuNjIgMTMwLjgxMSAxMTAuODM4IDEzMC44MTFDMTE5LjExMyAxMjkuMDM1IDEyNS42NDYgMTIxLjQ4NCAxMjUuNjQ2IDExMi4zNzhaIiBmaWxsPSJ3aGl0ZSIvPgo8L2c%2BCjxkZWZzPgo8Y2xpcFBhdGggaWQ9ImNsaXAwXzc3MTFfNDg5MSI%2BCjxyZWN0IHdpZHRoPSIxMzAiIGhlaWdodD0iMTg3IiBmaWxsPSJ3aGl0ZSIvPgo8L2NsaXBQYXRoPgo8L2RlZnM%2BCjwvc3ZnPgo%3D&logoColor=d91965)](https://brocoders.com/)
-[![Discord Badge](https://img.shields.io/badge/discord-NodeJS_boilerplate-d91965?style=flat&labelColor=5866f2&logo=discord&logoColor=white&link=https://discord.com/channels/520622812742811698/1197293125434093701)](https://discord.com/channels/520622812742811698/1197293125434093701)
-
-<br />
-<p align="center"><a href="https://discord.com/channels/520622812742811698/1197293125434093701"><img src="https://github.com/brocoders/nestjs-boilerplate/assets/72293912/c9d5fbf0-b56d-46b5-bb30-f96f44764bae" width="300"/></a></p>
-<br />
-
-## Description <!-- omit in toc -->
-
-NestJS REST API boilerplate for a typical project
-
-[Full documentation here](/docs/readme.md)
-
-Demo: <https://nestjs-boilerplate-test.herokuapp.com/docs>
-
-A fully compatible frontend boilerplate: <https://github.com/brocoders/extensive-react-boilerplate>
-
-Belongs to the [bc boilerplates](https://bcboilerplates.com/) ecosystem
-
-<https://github.com/user-attachments/assets/a66f114a-c714-4036-8eeb-20cbf04ae985>
-
-## Table of Contents <!-- omit in toc -->
-
-- [Features](#features)
-- [Contributors](#contributors)
-- [Support](#support)
+## Purpose and Vision
+- **Purpose**: FastIoT streamlines IoT project development by offering a comprehensive open-source platform that simplifies the integration of complex components such as servers, communication protocols, and admin interfaces. It enables developers, especially students and startups, to deploy complete IoT systems efficiently.
+- **Vision**: To become the go-to open-source platform for IoT development, empowering developers—from individuals to small businesses—to transform ideas into reality quickly and effectively. FastIoT integrates advanced technologies like edge AI, ensuring flexibility, security, and future-readiness.
 
 ## Features
+- **Backend Server**: Built with NestJS based on the [nestjs-boilerplate](https://github.com/brocoders/nestjs-boilerplate), providing scalable and secure APIs for IoT device management and data processing.
+- **Database**: Utilizes PostgreSQL for structured data storage, MongoDB for flexible, unstructured data, and Redis for high-performance caching and real-time data handling.
+- **MQTT Integration**: Employs Mosquitto as the MQTT broker for real-time communication between IoT devices and the server.
+- **Security**: Implements TLS 1.3 for data transmission, AES-256 for data storage, and adheres to OWASP Top 10 to mitigate common security vulnerabilities.
+- **Scalability**: Supports at least 1,000 concurrent device connections with API response times under 300ms and 99.9% uptime.
+- **Extensibility**: Designed to integrate emerging technologies like edge AI and support diverse IoT devices.
 
-- [x] Database. Support [TypeORM](https://www.npmjs.com/package/typeorm) and [Mongoose](https://www.npmjs.com/package/mongoose).
-- [x] Seeding.
-- [x] Config Service ([@nestjs/config](https://www.npmjs.com/package/@nestjs/config)).
-- [x] Mailing ([nodemailer](https://www.npmjs.com/package/nodemailer)).
-- [x] Sign in and sign up via email.
-- [x] Social sign in (Apple, Facebook, Google).
-- [x] Admin and User roles.
-- [x] Internationalization/Translations (I18N) ([nestjs-i18n](https://www.npmjs.com/package/nestjs-i18n)).
-- [x] File uploads. Support local and Amazon S3 drivers.
-- [x] Swagger.
-- [x] E2E and units tests.
-- [x] Docker.
-- [x] CI (Github Actions).
+## Project Goals
+- Create a comprehensive open-source platform to connect developers, IoT devices, and data management systems.
+- Enable rapid IoT project deployment, minimizing integration efforts.
+- Provide user-friendly tools for developers, particularly students and startups, to prototype and build IoT applications.
+- Enhance IoT system reliability and flexibility through advanced technologies and optimized communication protocols.
 
-## Contributors
+## Objectives
+- Develop a fully integrated backend with NestJS, PostgreSQL, MongoDB, Redis, and Mosquitto, enabling project initialization with a single command.
+- Ensure high compatibility with embedded devices like ESP32/ESP8266 through a dedicated C++ library.
+- Optimize developer experience with a secure, scalable, and easy-to-use backend system.
+- Support extensibility for future integrations, such as advanced IoT security and diverse device compatibility.
 
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tbody>
-    <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Shchepotin"><img src="https://avatars.githubusercontent.com/u/6001723?v=4?s=100" width="100px;" alt="Vladyslav Shchepotin"/><br /><sub><b>Vladyslav Shchepotin</b></sub></a><br /><a href="#maintenance-Shchepotin" title="Maintenance">🚧</a> <a href="#doc-Shchepotin" title="Documentation">📖</a> <a href="#code-Shchepotin" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/SergeiLomako"><img src="https://avatars.githubusercontent.com/u/31205374?v=4?s=100" width="100px;" alt="SergeiLomako"/><br /><sub><b>SergeiLomako</b></sub></a><br /><a href="#code-SergeiLomako" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/ElenVlass"><img src="https://avatars.githubusercontent.com/u/72293912?v=4?s=100" width="100px;" alt="Elena Vlasenko"/><br /><sub><b>Elena Vlasenko</b></sub></a><br /><a href="#doc-ElenVlass" title="Documentation">📖</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="http://brocoders.com"><img src="https://avatars.githubusercontent.com/u/226194?v=4?s=100" width="100px;" alt="Rodion"/><br /><sub><b>Rodion</b></sub></a><br /><a href="#business-sars" title="Business development">💼</a></td>
-    </tr>
-  </tbody>
-</table>
+## Success Criteria
+- Developers can initialize and deploy IoT projects with a single command, receiving rapid system feedback.
+- The platform operates reliably with no critical failures during development or deployment.
+- Backend APIs respond within 300ms under normal conditions, with 99.9% uptime.
+- Achieves at least 75% successful IoT project deployments within six months of launch, based on developer and tester feedback.
+- Budget adherence: Total development cost not exceeding 300 million VND, with monthly operational costs under 8 million VND.
 
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
+## Installation
+### Prerequisites
+- Node.js (v16 or higher)
+- PostgreSQL (v13 or higher)
+- MongoDB (v5 or higher)
+- Redis (v6 or higher)
+- Mosquitto MQTT Broker
+- Docker (optional, for Docker Compose setup)
+- Git
 
-<!-- ALL-CONTRIBUTORS-LIST:END -->
+### Option 1: Using Docker Compose
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/gnauqoa/fast-iot-be.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd fast-iot-be
+   ```
+3. Copy the Docker environment file:
+   ```bash
+   cp .env.docker.example .env
+   ```
+4. Configure environment variables in `.env` (e.g., PostgreSQL, MongoDB, Redis, and MQTT broker credentials).
+5. Start the services:
+   ```bash
+   docker-compose up -d
+   ```
+6. The backend will be available at `http://localhost:3000`.
 
-## Support
+### Option 2: Using npm
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/gnauqoa/fast-iot-be.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd fast-iot-be
+   ```
+3. Copy the development environment file:
+   ```bash
+   cp .env.dev.example .env
+   ```
+4. Configure environment variables in `.env` (e.g., PostgreSQL, MongoDB, Redis, and MQTT broker credentials).
+5. Install dependencies:
+   ```bash
+   npm install
+   ```
+6. Run database migrations:
+   ```bash
+   npm run migrate
+   ```
+7. Start the server:
+   ```bash
+   npm run start
+   ```
 
-If you seek consulting, support, or wish to collaborate, please contact us via [boilerplates@brocoders.com](mailto:boilerplates@brocoders.com). For any inquiries regarding boilerplates, feel free to ask on [GitHub Discussions](https://github.com/brocoders/nestjs-boilerplate/discussions) or [Discord](https://discord.com/channels/520622812742811698/1197293125434093701).
+## Usage
+- **API Access**: The backend exposes RESTful APIs for device management, data processing, and system monitoring, built on the [nestjs-boilerplate](https://github.com/brocoders/nestjs-boilerplate) structure. Refer to the API documentation (coming soon) for endpoints and usage.
+- **MQTT Integration**: Configure IoT devices to connect to the Mosquitto broker for real-time data transmission.
+- **Admin Panel**: Use the FastIoT admin panel (built with Refine) to monitor and manage devices via a user-friendly interface.
+
+## Quality Management
+- **Standards**:
+  - Adheres to OWASP Top 10 for security.
+  - Uses TLS 1.3 for data transmission and AES-256 for storage encryption.
+  - API response time ≤ 300ms, system uptime ≥ 99.9%.
+  - Supports multi-language admin panel for global accessibility.
+- **Control Procedures**:
+  - Git-based version control with strict pull request and code review processes, following the [nestjs-boilerplate](https://github.com/brocoders/nestjs-boilerplate) guidelines.
+  - Automated testing (unit, integration, and UAT) via GitHub Actions.
+  - Monitoring with Prometheus and Grafana for performance and error detection.
+  - Access control with role-based permissions and two-factor authentication (2FA).
+
+## Technical Stack
+- **Framework**: NestJS (TypeScript, based on [nestjs-boilerplate](https://github.com/brocoders/nestjs-boilerplate))
+- **Storage**: PostgreSQL (structured data), MongoDB (unstructured data), Redis (cache and real-time data)
+- **MQTT Broker**: Mosquitto
+- **Deployment**: Compatible with cloud platforms (AWS, Google Cloud) or local servers
+- **Security**: TLS 1.3, AES-256, OWASP compliance
+- **Monitoring**: Prometheus, Grafana
+
+## License
+This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+---
+
+FastIoT is developed as part of a project at the University of Information Technology, VNU-HCM. Join us in building a robust and accessible IoT development platform! 🌟

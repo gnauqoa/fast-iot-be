@@ -50,12 +50,7 @@ sudo systemctl enable docker
 docker --version
 ```
 
-<<<<<<< Updated upstream
-=======
-Copy the output and add it to your GitHub SSH keys in Settings > SSH and GPG keys.
-
->>>>>>> Stashed changes
-## SSL Setup - Option A: With Domain Name
+## SSL Setup
 
 Choose this option if you have a domain name pointing to your VPS.
 
