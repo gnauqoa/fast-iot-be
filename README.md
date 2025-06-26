@@ -112,13 +112,6 @@ FastIoT is an open-source platform designed to simplify and accelerate the devel
 - **Framework**: NestJS (TypeScript, based on [nestjs-boilerplate](https://github.com/brocoders/nestjs-boilerplate))
 - **Storage**: PostgreSQL (structured data), MongoDB (unstructured data), Redis (cache and real-time data)
 - **MQTT Broker**: Mosquitto
-- **Deployment**: Compatible with cloud platforms (AWS, Google Cloud) or local servers
-- **Security**: TLS 1.3, AES-256, OWASP compliance
-- **Monitoring**: Prometheus, Grafana
 
 ## License
 This project is licensed under the MIT License. See the `LICENSE` file for details.
-
----
-
-FastIoT is developed as part of a project at the University of Information Technology, VNU-HCM. Join us in building a robust and accessible IoT development platform! 🌟
