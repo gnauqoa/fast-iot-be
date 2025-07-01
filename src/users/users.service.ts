@@ -1,6 +1,7 @@
 import {
   HttpStatus,
   Injectable,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -10,26 +11,39 @@ import { UserRepository } from './infrastructure/persistence/user.repository';
 import { User } from './domain/user';
 import bcrypt from 'bcryptjs';
 import { AuthProvidersEnum } from '../auth/auth-providers.enum';
-import { FilesService } from '../files/files.service';
 import { RoleEnum } from '../roles/roles.enum';
 import { StatusEnum } from '../statuses/statuses.enum';
 import { IPaginationOptions } from '../utils/types/pagination-options';
-import { FileType } from '../files/domain/file';
 import { Role } from '../roles/domain/role';
 import { Status } from '../statuses/domain/status';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserEntity } from './infrastructure/persistence/relational/entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly usersRepository: UserRepository,
-    private readonly filesService: FilesService,
+    @InjectRepository(UserEntity) private readonly repo,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
-    // Do not remove comment below.
-    // <creating-property />
+  async updateAvatar({
+    userId,
+    file,
+  }: {
+    userId: number;
+    file: Express.Multer.File;
+  }) {
+    const user = await this.repo.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const base64Avatar = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    await this.repo.update(userId, { avatar: base64Avatar });
+    return { ...user, avatar: base64Avatar };
+  }
 
+  async create(createUserDto: CreateUserDto): Promise<User> {
     let password: string | undefined = undefined;
 
     if (createUserDto.password) {
@@ -52,25 +66,6 @@ export class UsersService {
         });
       }
       email = createUserDto.email;
-    }
-
-    let photo: FileType | null | undefined = undefined;
-
-    if (createUserDto.photo?.id) {
-      const fileObject = await this.filesService.findById(
-        createUserDto.photo.id,
-      );
-      if (!fileObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            photo: 'imageNotExists',
-          },
-        });
-      }
-      photo = fileObject;
-    } else if (createUserDto.photo === null) {
-      photo = null;
     }
 
     let role: Role | undefined = undefined;
@@ -114,13 +109,10 @@ export class UsersService {
     }
 
     return this.usersRepository.create({
-      // Do not remove comment below.
-      // <creating-property-payload />
       firstName: createUserDto.firstName,
       lastName: createUserDto.lastName,
       email: email,
       password: password,
-      photo: photo,
       role: role,
       status: status,
       provider: createUserDto.provider ?? AuthProvidersEnum.email,
@@ -173,9 +165,6 @@ export class UsersService {
     id: User['id'],
     updateUserDto: UpdateUserDto,
   ): Promise<User | null> {
-    // Do not remove comment below.
-    // <updating-property />
-
     let password: string | undefined = undefined;
 
     if (updateUserDto.password) {
@@ -206,25 +195,6 @@ export class UsersService {
       email = updateUserDto.email;
     } else if (updateUserDto.email === null) {
       email = null;
-    }
-
-    let photo: FileType | null | undefined = undefined;
-
-    if (updateUserDto.photo?.id) {
-      const fileObject = await this.filesService.findById(
-        updateUserDto.photo.id,
-      );
-      if (!fileObject) {
-        throw new UnprocessableEntityException({
-          status: HttpStatus.UNPROCESSABLE_ENTITY,
-          errors: {
-            photo: 'imageNotExists',
-          },
-        });
-      }
-      photo = fileObject;
-    } else if (updateUserDto.photo === null) {
-      photo = null;
     }
 
     let role: Role | undefined = undefined;
@@ -268,13 +238,10 @@ export class UsersService {
     }
 
     return this.usersRepository.update(id, {
-      // Do not remove comment below.
-      // <updating-property-payload />
       firstName: updateUserDto.firstName,
       lastName: updateUserDto.lastName,
       email,
       password,
-      photo,
       role,
       status,
       provider: updateUserDto.provider,

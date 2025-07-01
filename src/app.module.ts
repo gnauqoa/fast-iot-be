@@ -30,6 +30,7 @@ import firebaseConfig from './firebase/config/firebase.config';
 import { SocketIoModule } from './socket-io/socket-io.module';
 import { CheckDeviceService } from './cron/check-device.service';
 import { ScheduleModule } from '@nestjs/schedule';
+import { StatusesModule } from './statuses/statuses.module';
 
 @Module({
   imports: [
@@ -95,6 +96,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     FirebaseModule,
     NotificationsModule,
     SocketIoModule,
+    StatusesModule,
   ],
   providers: [CheckDeviceService],
 })

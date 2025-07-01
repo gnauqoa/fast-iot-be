@@ -31,6 +31,9 @@ export class UserEntity extends EntityRelationalHelper {
   @Column({ type: String, unique: true, nullable: true })
   email: string | null;
 
+  @Column({ type: String, nullable: true })
+  avatar?: string | null;
+
   @Column({ nullable: true })
   @Exclude({ toPlainOnly: true })
   password?: string;

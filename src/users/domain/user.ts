@@ -49,6 +49,12 @@ export class User {
   lastName: string | null;
 
   @ApiProperty({
+    type: String,
+    example: 'base64',
+  })
+  avatar?: string | null;
+
+  @ApiProperty({
     type: () => FileType,
   })
   photo?: FileType | null;

@@ -6,15 +6,26 @@ import bcrypt from 'bcryptjs';
 import { RoleEnum } from '../../../roles/roles.enum';
 import { StatusEnum } from '../../../statuses/statuses.enum';
 import { UserEntity } from '../../../users/infrastructure/persistence/relational/entities/user.entity';
+import { DeviceEntity } from '../../../devices/infrastructure/persistence/relational/entities/device.entity';
+import { SessionEntity } from '../../../session/infrastructure/persistence/relational/entities/session.entity';
+import { faker } from '@faker-js/faker';
 
 @Injectable()
 export class UserSeedService {
   constructor(
     @InjectRepository(UserEntity)
     private repository: Repository<UserEntity>,
+    @InjectRepository(DeviceEntity)
+    private deviceRepository: Repository<DeviceEntity>,
+    @InjectRepository(SessionEntity)
+    private sessionRepository: Repository<SessionEntity>,
   ) {}
 
   async run() {
+    await this.sessionRepository.delete({});
+    await this.deviceRepository.delete({});
+    await this.repository.delete({});
+
     const countAdmin = await this.repository.count({
       where: {
         role: {
@@ -33,6 +44,7 @@ export class UserSeedService {
           lastName: 'Admin',
           email: 'admin@example.com',
           password,
+          avatar: faker.image.avatarGitHub(),
           role: {
             id: RoleEnum.admin,
             name: 'Admin',
@@ -63,6 +75,7 @@ export class UserSeedService {
           lastName: 'Doe',
           email: 'john.doe@example.com',
           password,
+          avatar: faker.image.avatarGitHub(),
           role: {
             id: RoleEnum.user,
             name: 'Admin',

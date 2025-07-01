@@ -1,6 +1,6 @@
-import { Controller, UseGuards } from '@nestjs/common';
+import { Body, Controller, Patch, Request, UseGuards } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto, UpdateUserPasswordDto } from './dto/update-user.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../roles/roles.decorator';
 import { RoleEnum } from '../roles/roles.enum';
@@ -74,6 +74,24 @@ export class UsersController implements CrudController<UserEntity> {
       roleName: newCondition['role.name'],
       page: req.parsed.page,
       limit: req.parsed.limit,
+    });
+  }
+
+  @Patch(':id/password')
+  async updatePassword(
+    @Request() request: any,
+    @Body() dto: UpdateUserPasswordDto,
+  ): Promise<UserEntity> {
+    const user = request.user;
+    const currentUserId: number = user.id;
+    const userRoleId: number = user.role.id;
+
+    return await this.service.updatePassword({
+      currentUserId,
+      userRoleId,
+      userUpdateId: Number(request.params.id) || currentUserId,
+      password: dto.password || '',
+      previousPassword: dto?.previousPassword || '',
     });
   }
 }

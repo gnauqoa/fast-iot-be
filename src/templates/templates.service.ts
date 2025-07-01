@@ -191,7 +191,6 @@ export class TemplatesService {
       }
 
       await this.setTemplateCache(id, updatedTemplate);
-      console.log('updatedTemplate123', updatedTemplate);
 
       return updatedTemplate;
     } catch (error) {

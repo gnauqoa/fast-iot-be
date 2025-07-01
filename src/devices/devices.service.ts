@@ -147,7 +147,9 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       })
       .andWhere('role = :role', { role: DeviceRole.DEVICE })
       .andWhere('device.status = :status', {
-        status: status ? DeviceStatus[status] : DeviceStatus.OFFLINE,
+        status: status
+          ? DeviceStatus[status.toUpperCase()]
+          : DeviceStatus.OFFLINE,
       });
 
     // Get total count and paginated results
@@ -232,78 +234,56 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
    * @returns Updated device entity with channels
    */
   async mqttUpdate(id: number, deviceData: UpdateDeviceSensorDto) {
-    const queryRunner = this.repo.manager.connection.createQueryRunner();
+    await this.updateDeviceStatusAndPosition(id, deviceData);
 
-    try {
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
+    // Get updated device data
+    const updatedDevice = await this.getDeviceDataFromCache(id);
 
-      await this.updateDeviceStatusAndPosition(queryRunner, id, deviceData);
+    if (!updatedDevice) {
+      throw new NotFoundException('Device not found');
+    }
 
-      // Get updated device data
-      const updatedDevice = await this.getDeviceDataFromCache(id);
+    const status = deviceData.status
+      ? DeviceStatusStr[deviceData.status]
+      : DeviceStatusStr.ONLINE;
 
-      if (!updatedDevice) {
-        throw new NotFoundException('Device not found');
-      }
-      const status = deviceData.status
-        ? DeviceStatusStr[deviceData.status]
-        : DeviceStatusStr.ONLINE;
-      let finalDeviceData = {
+    let finalDeviceData = {
+      ...updatedDevice,
+      status,
+    };
+    let updatedChannels = updatedDevice.channels || [];
+
+    // Handle multiple channel updates
+    if (deviceData.channels?.length) {
+      updatedChannels = await this.channelRepository.bulkUpdateDeviceChannels(
+        id,
+        updatedDevice.templateId,
+        deviceData.channels,
+      );
+
+      finalDeviceData = Object.assign(new DeviceEntity(), {
         ...updatedDevice,
         status,
-      };
-      let updatedChannels = updatedDevice.channels || [];
-      // Handle multiple channel updates
-      if (deviceData.channels?.length) {
-        updatedChannels = await this.channelRepository.bulkUpdateDeviceChannels(
-          id,
-          updatedDevice.templateId,
-          deviceData.channels,
-        );
+        channels: updatedChannels,
+      });
 
-        finalDeviceData = Object.assign(new DeviceEntity(), {
-          ...updatedDevice,
-          status,
-          channels: updatedChannels,
-        });
-
-        await this.updateDeviceCache(id, finalDeviceData);
-      }
-
-      await queryRunner.commitTransaction();
-
-      const updatedDeviceData = await this.updateDeviceCache(
-        id,
-        finalDeviceData,
-      );
-
-      const notifyData = {
-        id: finalDeviceData.id,
-        channels: updatedDeviceData.channels,
-        status: finalDeviceData.status,
-        lastUpdate: finalDeviceData.lastUpdate,
-        userId: finalDeviceData.userId,
-        position: finalDeviceData.position,
-      };
-
-      // Notify clients about the update
-      this.notifyClients(id, notifyData);
-      this.mqttService.publicMessage(
-        `device/${id}`,
-        updatedChannels.map((ch) => ({
-          name: ch.name,
-          value: ch.value,
-        })),
-      );
-
-      return finalDeviceData;
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
+      await this.updateDeviceCache(id, finalDeviceData);
     }
+
+    const updatedDeviceData = await this.updateDeviceCache(id, finalDeviceData);
+
+    const notifyData = {
+      id: finalDeviceData.id,
+      channels: updatedDeviceData.channels,
+      status: finalDeviceData.status,
+      lastUpdate: finalDeviceData.lastUpdate,
+      userId: finalDeviceData.userId,
+      position: finalDeviceData.position,
+    };
+
+    this.notifyClients(id, notifyData);
+
+    return finalDeviceData;
   }
 
   /**
@@ -311,7 +291,6 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
    * @private
    */
   private async updateDeviceStatusAndPosition(
-    queryRunner: any,
     id: number,
     deviceData: UpdateDeviceSensorDto,
   ): Promise<void> {
@@ -322,7 +301,7 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       lastUpdate: new Date(),
     };
 
-    const updateQuery = queryRunner.manager
+    const updateQuery = this.repo
       .createQueryBuilder()
       .update(DeviceEntity)
       .where('id = :id', { id });
@@ -331,45 +310,17 @@ export class DevicesService extends TypeOrmCrudService<DeviceEntity> {
       const longitude = parseFloat(deviceData.longitude);
       const latitude = parseFloat(deviceData.latitude);
       updateQuery.set({
-        ...updateData,
+        status: updateData.status,
+        lastUpdate: updateData.lastUpdate,
         position: () => createPointExpression(longitude, latitude),
       });
     } else {
-      updateQuery.set(updateData);
+      updateQuery.set({
+        status: updateData.status,
+        lastUpdate: updateData.lastUpdate,
+      });
     }
 
     await updateQuery.execute();
-  }
-
-  /**
-   * Update device channel and cache
-   * @private
-   */
-  private async updateDeviceChannel(
-    id: number,
-    device: DeviceEntity,
-    channelName: string,
-    channelValue: any,
-  ): Promise<DeviceEntity> {
-    const channel = await this.channelRepository.updateDeviceChannel(
-      id,
-      device.templateId,
-      channelName,
-      channelValue,
-    );
-
-    const updatedChannels = device.channels?.find(
-      (c) => c.name === channel.name,
-    )
-      ? device.channels.map((c) => (c.name === channel.name ? channel : c))
-      : [...(device.channels || []), channel];
-
-    const updatedDevice = Object.assign(new DeviceEntity(), {
-      ...device,
-      channels: updatedChannels,
-    });
-
-    await this.updateDeviceCache(id, updatedDevice);
-    return updatedDevice;
   }
 }

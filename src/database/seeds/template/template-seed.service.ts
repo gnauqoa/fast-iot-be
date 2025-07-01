@@ -6,7 +6,6 @@ import { Templates } from '../../../templates/infrastructure/persistence/documen
 import { UserEntity } from '../../../users/infrastructure/persistence/relational/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ChannelType } from '../../../templates/domain/enums/channel-type.enum';
 
 @Injectable()
 export class TemplateSeedService {
@@ -30,20 +29,74 @@ export class TemplateSeedService {
       updatedAt: faker.date.recent(),
       channels: [
         {
-          name: 'status',
-          type: ChannelType.SELECT,
-          options: [
-            {
-              label: 'Accident',
-              value: 'accident',
-            },
-            {
-              label: 'Normal',
-              value: 'normal',
-            },
-          ],
+          name: 'v1',
+          type: 'Boolean',
+          options: [],
+        },
+        {
+          name: 'v2',
+          type: 'String',
+          options: [],
         },
       ],
+      desktopPrototype: {
+        nodes: [
+          {
+            id: '1',
+            type: 'button',
+            position: {
+              x: 215.00692749023438,
+              y: 300.0138854980469,
+            },
+            data: {
+              label: 'Led',
+              channel: 'v1',
+            },
+            measured: {
+              width: 200,
+              height: 100,
+            },
+            selected: false,
+            dragging: false,
+          },
+          {
+            id: '2',
+            type: 'label',
+            position: {
+              x: 216.51039123535156,
+              y: 121.02082824707031,
+            },
+            data: {
+              label: 'Temp',
+              channel: 'v2',
+            },
+            measured: {
+              width: 200,
+              height: 100,
+            },
+            selected: false,
+            dragging: false,
+          },
+          {
+            id: '3',
+            type: 'label',
+            position: {
+              x: 455.51039123535156,
+              y: 121.52082824707031,
+            },
+            data: {
+              label: 'Humi',
+              channel: 'v2',
+            },
+            measured: {
+              width: 200,
+              height: 100,
+            },
+            selected: false,
+            dragging: false,
+          },
+        ],
+      },
     };
   }
 

@@ -24,7 +24,7 @@ export class CheckDeviceService {
 
     const offlineDevices = await this.deviceRepository.find({
       where: {
-        updatedAt: LessThan(fiveMinutesAgo),
+        lastUpdate: LessThan(fiveMinutesAgo),
         status: DeviceStatusStr.ONLINE,
       },
       join: { alias: 'device', leftJoinAndSelect: { user: 'device.user' } },

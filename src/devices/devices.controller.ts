@@ -29,7 +29,6 @@ import { DeviceOwnershipGuard } from './device-ownership.guard';
 import crypto from 'crypto';
 import { DeviceRole } from './domain/device-role.enum';
 import { RolesGuard } from '../roles/roles.guard';
-import { Roles } from '../roles/roles.decorator';
 import { ScanDevicesDto } from './dto/scan-devices.dto';
 import { DeviceStatusStr } from './domain/device-status.enum';
 import bcrypt from 'bcryptjs';
@@ -83,7 +82,7 @@ interface DevicesResponse {
       user: { eager: true },
       template: { eager: true },
     },
-    sort: [{ field: 'lastUpdate', order: 'DESC' }],
+    sort: [{ field: 'id', order: 'DESC' }],
   },
 
   routes: {
@@ -117,7 +116,6 @@ export class DevicesController implements CrudController<DeviceEntity> {
   }
 
   @Override('getManyBase')
-  @Roles(RoleEnum.admin)
   async ovGetManyBase(
     @ParsedRequest() req: CrudRequest,
     @Request() request: any,
@@ -222,7 +220,7 @@ export class DevicesController implements CrudController<DeviceEntity> {
       ...dto,
     });
 
-    const template = await this.templateRepository.findById(device.templateId);
+    const template = await this.templateRepository.findById(dto.templateId);
     if (!template) {
       throw new NotFoundException('Template not found');
     }

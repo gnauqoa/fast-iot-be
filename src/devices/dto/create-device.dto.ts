@@ -19,4 +19,12 @@ export class CreateDeviceDto {
   @IsNumber()
   @IsNotEmpty()
   userId: number;
+
+  @ApiProperty({
+    type: String,
+    description: 'Template ID',
+    example: '1',
+  })
+  @IsString()
+  templateId: string;
 }

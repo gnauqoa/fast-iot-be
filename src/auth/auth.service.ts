@@ -39,6 +39,19 @@ export class AuthService {
     private configService: ConfigService<AllConfigType>,
   ) {}
 
+  async updateAvatar({
+    userId,
+    file,
+  }: {
+    userId: number;
+    file: Express.Multer.File;
+  }): Promise<NullableType<User>> {
+    return await this.usersService.updateAvatar({
+      userId,
+      file,
+    });
+  }
+
   async validateLogin(loginDto: AuthEmailLoginDto): Promise<LoginResponseDto> {
     const user = await this.usersService.findByEmail(loginDto.email);
 
@@ -392,7 +405,7 @@ export class AuthService {
   }
 
   async me(userJwtPayload: JwtPayloadType): Promise<NullableType<User>> {
-    return this.usersService.findById(userJwtPayload.id);
+    return await this.usersService.findById(userJwtPayload.id);
   }
 
   async update(
@@ -411,11 +424,11 @@ export class AuthService {
     }
 
     if (userDto.password) {
-      if (!userDto.oldPassword) {
+      if (!userDto.previousPassword) {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: {
-            oldPassword: 'missingOldPassword',
+            previousPassword: 'missingPreviousPassword',
           },
         });
       }
@@ -424,13 +437,13 @@ export class AuthService {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: {
-            oldPassword: 'incorrectOldPassword',
+            previousPassword: 'incorrectPreviousPassword',
           },
         });
       }
 
       const isValidOldPassword = await bcrypt.compare(
-        userDto.oldPassword,
+        userDto.previousPassword,
         currentUser.password,
       );
 
@@ -438,7 +451,7 @@ export class AuthService {
         throw new UnprocessableEntityException({
           status: HttpStatus.UNPROCESSABLE_ENTITY,
           errors: {
-            oldPassword: 'incorrectOldPassword',
+            previousPassword: 'incorrectPreviousPassword',
           },
         });
       } else {
@@ -485,7 +498,7 @@ export class AuthService {
     }
 
     delete userDto.email;
-    delete userDto.oldPassword;
+    delete userDto.previousPassword;
 
     await this.usersService.update(userJwtPayload.id, userDto);
 

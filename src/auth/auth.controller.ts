@@ -10,13 +10,19 @@ import {
   Patch,
   Delete,
   SerializeOptions,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthEmailLoginDto } from './dto/auth-email-login.dto';
-import { AuthForgotPasswordDto } from './dto/auth-forgot-password.dto';
 import { AuthConfirmEmailDto } from './dto/auth-confirm-email.dto';
-import { AuthResetPasswordDto } from './dto/auth-reset-password.dto';
 import { AuthUpdateDto } from './dto/auth-update.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthRegisterLoginDto } from './dto/auth-register-login.dto';
@@ -24,6 +30,7 @@ import { LoginResponseDto } from './dto/login-response.dto';
 import { NullableType } from '../utils/types/nullable.type';
 import { User } from '../users/domain/user';
 import { RefreshResponseDto } from './dto/refresh-response.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Auth')
 @Controller({
@@ -67,22 +74,22 @@ export class AuthController {
     return this.service.confirmNewEmail(confirmEmailDto.hash);
   }
 
-  @Post('forgot/password')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async forgotPassword(
-    @Body() forgotPasswordDto: AuthForgotPasswordDto,
-  ): Promise<void> {
-    return this.service.forgotPassword(forgotPasswordDto.email);
-  }
+  // @Post('forgot/password')
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async forgotPassword(
+  //   @Body() forgotPasswordDto: AuthForgotPasswordDto,
+  // ): Promise<void> {
+  //   return this.service.forgotPassword(forgotPasswordDto.email);
+  // }
 
-  @Post('reset/password')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  resetPassword(@Body() resetPasswordDto: AuthResetPasswordDto): Promise<void> {
-    return this.service.resetPassword(
-      resetPasswordDto.hash,
-      resetPasswordDto.password,
-    );
-  }
+  // @Post('reset/password')
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // resetPassword(@Body() resetPasswordDto: AuthResetPasswordDto): Promise<void> {
+  //   return this.service.resetPassword(
+  //     resetPasswordDto.hash,
+  //     resetPasswordDto.password,
+  //   );
+  // }
 
   @ApiBearerAuth()
   @SerializeOptions({
@@ -148,5 +155,34 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   public async delete(@Request() request): Promise<void> {
     return this.service.softDelete(request.user);
+  }
+
+  @ApiBearerAuth()
+  @SerializeOptions({
+    groups: ['me'],
+  })
+  @Patch('avatar')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  async updateAvatar(
+    @Request() request: any,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<NullableType<User>> {
+    return await this.service.updateAvatar({
+      userId: request.user.id,
+      file,
+    });
   }
 }

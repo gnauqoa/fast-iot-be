@@ -15,6 +15,7 @@ export class UserMapper {
     domainEntity.socialId = raw.socialId;
     domainEntity.firstName = raw.firstName;
     domainEntity.lastName = raw.lastName;
+    domainEntity.avatar = raw.avatar;
     if (raw.photo) {
       domainEntity.photo = FileMapper.toDomain(raw.photo);
     }
@@ -64,6 +65,7 @@ export class UserMapper {
     persistenceEntity.photo = photo;
     persistenceEntity.role = role;
     persistenceEntity.status = status;
+    persistenceEntity.avatar = domainEntity.avatar;
     persistenceEntity.createdAt = domainEntity.createdAt;
     persistenceEntity.updatedAt = domainEntity.updatedAt;
     persistenceEntity.deletedAt = domainEntity.deletedAt;
