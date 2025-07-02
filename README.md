@@ -12,21 +12,14 @@
 
 <h4 align="center">A framework to quick start IoT project.</h4>
 </div>
+
 <p align="center">
   <a href="#key-features">Key Features</a> •
   <a href="#repository-structure">Repository Structure</a> •
   <a href="#how-to-use">How To Use</a> •
   <a href="#license">License</a>
 </p>
-<div align="center"> 
-<img src="https://img.shields.io/github/license/gnauqoa/fast-iot-be?style=flat-square&logo=opensourceinitiative&logoColor=white&color=8a2be2" alt="license">
-<img src="https://img.shields.io/github/last-commit/gnauqoa/fast-iot-be?style=flat-square&logo=git&logoColor=white&color=8a2be2" alt="last-commit">
-<img src="https://img.shields.io/github/languages/top/gnauqoa/fast-iot-be?style=flat-square&color=8a2be2" alt="repo-top-language">
-<img src="https://img.shields.io/github/languages/count/gnauqoa/fast-iot-be?style=flat-square&color=8a2be2" alt="repo-language-count">
-</div>
-
-<em>Built with the tools and technologies:</em>
-
+<div align="center">
 <img src="https://img.shields.io/badge/Socket.io-010101.svg?style=flat-square&logo=socketdotio&logoColor=white" alt="Socket.io">
 <img src="https://img.shields.io/badge/npm-CB3837.svg?style=flat-square&logo=npm&logoColor=white" alt="npm">
 <img src="https://img.shields.io/badge/TypeORM-FE0803.svg?style=flat-square&logo=TypeORM&logoColor=white" alt="TypeORM">
@@ -36,6 +29,7 @@
 <img src="https://img.shields.io/badge/Docker-2496ED.svg?style=flat-square&logo=Docker&logoColor=white" alt="Docker">
 <img src="https://img.shields.io/badge/TypeScript-3178C6.svg?style=flat-square&logo=TypeScript&logoColor=white" alt="TypeScript">
 <img src="https://img.shields.io/badge/MQTT-660066.svg?style=flat-square&logo=MQTT&logoColor=white" alt="MQTT">
+</div>
 
 </div>
 
