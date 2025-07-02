@@ -1,42 +1,52 @@
-# FastIoT Backend 🚀
+<div id="top">
 
-## Overview
-FastIoT is an open-source platform designed to simplify and accelerate the development of IoT projects. The backend, built with **NestJS** using the [nestjs-boilerplate](https://github.com/brocoders/nestjs-boilerplate) template, serves as the core of the FastIoT ecosystem. It provides robust APIs, secure data handling, and seamless integration with IoT devices. The platform integrates **PostgreSQL** and **MongoDB** for flexible data storage, **Redis** for caching and real-time data processing, and **Mosquitto** as the MQTT broker for efficient device communication. This repository contains the backend codebase for FastIoT, enabling developers to quickly set up and deploy IoT applications with a single command.
+<!-- HEADER STYLE: CONSOLE -->
+<div align="center">
 
-## Purpose and Vision
-- **Purpose**: FastIoT streamlines IoT project development by offering a comprehensive open-source platform that simplifies the integration of complex components such as servers, communication protocols, and admin interfaces. It enables developers, especially students and startups, to deploy complete IoT systems efficiently.
-- **Vision**: To become the go-to open-source platform for IoT development, empowering developers—from individuals to small businesses—to transform ideas into reality quickly and effectively. FastIoT integrates advanced technologies like edge AI, ensuring flexibility, security, and future-readiness.
+<h1 align="center">
+  <br>
+  <a href="http://www.amitmerchant.com/electron-markdownify"><img src="https://raw.githubusercontent.com/gnauqoa/fast-iot-fe/c8f4e737913bd522e44882d34bd66b855ba340f1/public/fast-iot-no-text.svg"alt="Markdownify" width="200"></a>
+  <br>Fast IoT - Backend
+  <br>
+</h1>
+
+<h4 align="center">A framework to quick start IoT project.</h4>
+</div>
+<p align="center">
+  <a href="#key-features">Key Features</a> •
+  <a href="#repository-structure">Repository Structure</a> •
+  <a href="#how-to-use">How To Use</a> •
+  <a href="#license">License</a>
+</p>
+<div align="center"> 
+<img src="https://img.shields.io/github/license/gnauqoa/fast-iot-be?style=flat-square&logo=opensourceinitiative&logoColor=white&color=8a2be2" alt="license">
+<img src="https://img.shields.io/github/last-commit/gnauqoa/fast-iot-be?style=flat-square&logo=git&logoColor=white&color=8a2be2" alt="last-commit">
+<img src="https://img.shields.io/github/languages/top/gnauqoa/fast-iot-be?style=flat-square&color=8a2be2" alt="repo-top-language">
+<img src="https://img.shields.io/github/languages/count/gnauqoa/fast-iot-be?style=flat-square&color=8a2be2" alt="repo-language-count">
+</div>
+
+<em>Built with the tools and technologies:</em>
+
+<img src="https://img.shields.io/badge/Socket.io-010101.svg?style=flat-square&logo=socketdotio&logoColor=white" alt="Socket.io">
+<img src="https://img.shields.io/badge/npm-CB3837.svg?style=flat-square&logo=npm&logoColor=white" alt="npm">
+<img src="https://img.shields.io/badge/TypeORM-FE0803.svg?style=flat-square&logo=TypeORM&logoColor=white" alt="TypeORM">
+<img src="https://img.shields.io/badge/Redis-FF4438.svg?style=flat-square&logo=Redis&logoColor=white" alt="Redis">
+<img src="https://img.shields.io/badge/Mongoose-F04D35.svg?style=flat-square&logo=Mongoose&logoColor=white" alt="Mongoose">
+<img src="https://img.shields.io/badge/postgres-4169E1.svg?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
+<img src="https://img.shields.io/badge/Docker-2496ED.svg?style=flat-square&logo=Docker&logoColor=white" alt="Docker">
+<img src="https://img.shields.io/badge/TypeScript-3178C6.svg?style=flat-square&logo=TypeScript&logoColor=white" alt="TypeScript">
+<img src="https://img.shields.io/badge/MQTT-660066.svg?style=flat-square&logo=MQTT&logoColor=white" alt="MQTT">
+
+</div>
 
 ## Features
 - **Backend Server**: Built with NestJS based on the [nestjs-boilerplate](https://github.com/brocoders/nestjs-boilerplate), providing scalable and secure APIs for IoT device management and data processing.
 - **Database**: Utilizes PostgreSQL for structured data storage, MongoDB for flexible, unstructured data, and Redis for high-performance caching and real-time data handling.
 - **MQTT Integration**: Employs Mosquitto as the MQTT broker for real-time communication between IoT devices and the server.
-- **Security**: Implements TLS 1.3 for data transmission, AES-256 for data storage, and adheres to OWASP Top 10 to mitigate common security vulnerabilities.
-- **Scalability**: Supports at least 1,000 concurrent device connections with API response times under 300ms and 99.9% uptime.
-- **Extensibility**: Designed to integrate emerging technologies like edge AI and support diverse IoT devices.
-
-## Project Goals
-- Create a comprehensive open-source platform to connect developers, IoT devices, and data management systems.
-- Enable rapid IoT project deployment, minimizing integration efforts.
-- Provide user-friendly tools for developers, particularly students and startups, to prototype and build IoT applications.
-- Enhance IoT system reliability and flexibility through advanced technologies and optimized communication protocols.
-
-## Objectives
-- Develop a fully integrated backend with NestJS, PostgreSQL, MongoDB, Redis, and Mosquitto, enabling project initialization with a single command.
-- Ensure high compatibility with embedded devices like ESP32/ESP8266 through a dedicated C++ library.
-- Optimize developer experience with a secure, scalable, and easy-to-use backend system.
-- Support extensibility for future integrations, such as advanced IoT security and diverse device compatibility.
-
-## Success Criteria
-- Developers can initialize and deploy IoT projects with a single command, receiving rapid system feedback.
-- The platform operates reliably with no critical failures during development or deployment.
-- Backend APIs respond within 300ms under normal conditions, with 99.9% uptime.
-- Achieves at least 75% successful IoT project deployments within six months of launch, based on developer and tester feedback.
-- Budget adherence: Total development cost not exceeding 300 million VND, with monthly operational costs under 8 million VND.
 
 ## Installation
 ### Prerequisites
-- Node.js (v16 or higher)
+- Node.js (v18 or higher)
 - PostgreSQL (v13 or higher)
 - MongoDB (v5 or higher)
 - Redis (v6 or higher)
@@ -55,7 +65,7 @@ FastIoT is an open-source platform designed to simplify and accelerate the devel
    ```
 3. Copy the Docker environment file:
    ```bash
-   cp .env.docker.example .env
+   cp .env-docker-example .env
    ```
 4. Configure environment variables in `.env` (e.g., PostgreSQL, MongoDB, Redis, and MQTT broker credentials).
 5. Start the services:
@@ -75,7 +85,7 @@ FastIoT is an open-source platform designed to simplify and accelerate the devel
    ```
 3. Copy the development environment file:
    ```bash
-   cp .env.dev.example .env
+   cp .env-dev-example .env
    ```
 4. Configure environment variables in `.env` (e.g., PostgreSQL, MongoDB, Redis, and MQTT broker credentials).
 5. Install dependencies:
