@@ -10,28 +10,30 @@
   <br>
 </h1>
 
-<h4 align="center">A framework to quick start IoT project.</h4>
+<h4>A full-stack framework to fast-track your IoT development.</h4>
 </div>
 
 <p align="center">
-  <a href="#key-features">Key Features</a> •
-  <a href="#repository-structure">Repository Structure</a> •
-  <a href="#how-to-use">How To Use</a> •
+  <a href="#features">Features</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#technical-stack">Technical Stack</a> •
   <a href="#license">License</a>
 </p>
-<div align="center">
-<img src="https://img.shields.io/badge/Socket.io-010101.svg?style=flat-square&logo=socketdotio&logoColor=white" alt="Socket.io">
-<img src="https://img.shields.io/badge/npm-CB3837.svg?style=flat-square&logo=npm&logoColor=white" alt="npm">
-<img src="https://img.shields.io/badge/TypeORM-FE0803.svg?style=flat-square&logo=TypeORM&logoColor=white" alt="TypeORM">
-<img src="https://img.shields.io/badge/Redis-FF4438.svg?style=flat-square&logo=Redis&logoColor=white" alt="Redis">
-<img src="https://img.shields.io/badge/Mongoose-F04D35.svg?style=flat-square&logo=Mongoose&logoColor=white" alt="Mongoose">
-<img src="https://img.shields.io/badge/postgres-4169E1.svg?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
-<img src="https://img.shields.io/badge/Docker-2496ED.svg?style=flat-square&logo=Docker&logoColor=white" alt="Docker">
-<img src="https://img.shields.io/badge/TypeScript-3178C6.svg?style=flat-square&logo=TypeScript&logoColor=white" alt="TypeScript">
-<img src="https://img.shields.io/badge/MQTT-660066.svg?style=flat-square&logo=MQTT&logoColor=white" alt="MQTT">
-<img src="https://img.shields.io/badge/Firebase-FFCA28.svg?style=flat-square&logo=firebase&logoColor=black" alt="Firebase">
-</div>
 
+<div align="center">
+  <img src="https://img.shields.io/badge/NestJS-E0234E.svg?style=flat-square&logo=nestjs&logoColor=white" alt="NestJS" />
+  <img src="https://img.shields.io/badge/i18n-Multilingual-6c63ff.svg?style=flat-square&logo=nestjs&logoColor=white" alt="NestJS i18n" />
+  <img src="https://img.shields.io/badge/Socket.io-010101.svg?style=flat-square&logo=socketdotio&logoColor=white" alt="Socket.io" />
+  <img src="https://img.shields.io/badge/MQTT-660066.svg?style=flat-square&logo=MQTT&logoColor=white" alt="MQTT" />
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1.svg?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/MongoDB-47A248.svg?style=flat-square&logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/Redis-FF4438.svg?style=flat-square&logo=Redis&logoColor=white" alt="Redis" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6.svg?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Docker-2496ED.svg?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Firebase-FFCA28.svg?style=flat-square&logo=firebase&logoColor=black" alt="Firebase" />
+  <img src="https://img.shields.io/badge/Swagger-85EA2D.svg?style=flat-square&logo=swagger&logoColor=black" alt="Swagger" />
+</div>
 </div>
 
 ## Features
@@ -82,7 +84,7 @@
    ```bash
    cp .env-dev-example .env
    ```
-4. Configure environment variables in `.env` (e.g., PostgreSQL, MongoDB, Redis, and MQTT broker credentials).
+4. Configure environment variables in `.env` (e.g., PostgreSQL, MongoDB, Redis, and MQTT broker credentials, Firebase).
 5. Install dependencies:
    ```bash
    npm install
@@ -91,32 +93,48 @@
    ```bash
    npm run migrate
    ```
-7. Start the server:
+7. Run seed database:
    ```bash
-   npm run start
+   npm run seed
    ```
+8. Start the server:
+   ```bash
+   npm run dev
+   ```
+This will spin up:
+
+- 🌐 Backend API available at [`http://localhost:3000`](http://localhost:3000)
+- 📡 MQTT Broker for IoT device communication via port [`1883`](http://localhost:1883)
+- 🧪 Swagger UI for dev mode at [`http://localhost:3000/docs`](http://localhost:3000/docs)
+
 
 ## Usage
-- **API Access**: The backend exposes RESTful APIs for device management, data processing, and system monitoring, built on the [nestjs-boilerplate](https://github.com/brocoders/nestjs-boilerplate) structure. Refer to the API documentation (coming soon) for endpoints and usage.
-- **MQTT Integration**: Configure IoT devices to connect to the Mosquitto broker for real-time data transmission.
-- **Admin Panel**: Use the FastIoT admin panel (built with Refine) to monitor and manage devices via a user-friendly interface.
 
-## Quality Management
-- **Standards**:
-  - Adheres to OWASP Top 10 for security.
-  - Uses TLS 1.3 for data transmission and AES-256 for storage encryption.
-  - API response time ≤ 300ms, system uptime ≥ 99.9%.
-  - Supports multi-language admin panel for global accessibility.
-- **Control Procedures**:
-  - Git-based version control with strict pull request and code review processes, following the [nestjs-boilerplate](https://github.com/brocoders/nestjs-boilerplate) guidelines.
-  - Automated testing (unit, integration, and UAT) via GitHub Actions.
-  - Monitoring with Prometheus and Grafana for performance and error detection.
-  - Access control with role-based permissions and two-factor authentication (2FA).
+- 🛠️ **API Access & Documentation**  
+  The backend exposes a full suite of RESTful endpoints for device management, data processing, and system monitoring, built on the [nestjs‑boilerplate](https://github.com/brocoders/nestjs-boilerplate) framework.  
+  👉 Explore and test every endpoint interactively via **Swagger UI** (development mode):  
+  [`http://localhost:3000/docs`](http://localhost:3000/docs)
+
+- 📡 **MQTT Integration**  
+  Connect your IoT devices to the **Mosquitto MQTT broker** for real‑time data exchange.  
+  - **Authentication**: Supports username/password or token-based login.  
+  - **Authorization**: Topic-level publish/subscribe permissions are managed via role-based access control (RBAC).
+
+- 🔄 **Real-Time Communication & Notifications**  
+  - **Socket.IO**: Enables low-latency, bidirectional communication for live dashboards, control commands (e.g., toggling relays), and **instant notifications** to connected clients.
+  - **Firebase Cloud Messaging (FCM)**: Delivers **push notifications** to mobile or browser clients for alerts like device offline, threshold breaches, or custom events.
+
+- 🔐 **Security**  
+  - **REST API**: Protected using JWT authentication and TLS 1.3 encryption.  
+  - **MQTT**: Encrypted with TLS, with fine-grained access controls.  
+  - **WebSocket & FCM**: Authenticated using secure tokens, integrated with RBAC for scoped access.
+
 
 ## Technical Stack
 - **Framework**: NestJS (TypeScript, based on [nestjs-boilerplate](https://github.com/brocoders/nestjs-boilerplate))
 - **Storage**: PostgreSQL (structured data), MongoDB (unstructured data), Redis (cache and real-time data)
 - **MQTT Broker**: Mosquitto
+- **Firebase**: Currently just for FCM
 
 ## License
 This project is licensed under the MIT License. See the `LICENSE` file for details.
