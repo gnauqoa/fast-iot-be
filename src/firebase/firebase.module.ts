@@ -13,6 +13,12 @@ import { FirebaseService } from './firebase.service';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const firebase = configService.get('firebase', { infer: true });
+
+        if (!firebase.enabled) {
+          console.log('Firebase is disabled due to missing configuration');
+          return null;
+        }
+
         return admin.initializeApp({
           credential: admin.credential.cert({
             projectId: firebase.projectId,

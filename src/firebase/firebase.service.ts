@@ -1,5 +1,6 @@
 // firebase.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, Optional } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
 
 export interface NotificationData {
@@ -8,7 +9,17 @@ export interface NotificationData {
 
 @Injectable()
 export class FirebaseService {
-  public sendNotification({
+  constructor(
+    @Optional() @Inject('FIREBASE_ADMIN') private firebaseAdmin: admin.app.App,
+    private configService: ConfigService,
+  ) {}
+
+  private isFirebaseEnabled(): boolean {
+    const firebase = this.configService.get('firebase', { infer: true });
+    return firebase?.enabled ?? false;
+  }
+
+  public async sendNotification({
     token,
     title,
     body,
@@ -19,6 +30,16 @@ export class FirebaseService {
     body: string;
     data: NotificationData;
   }): Promise<string> {
+    if (!this.isFirebaseEnabled()) {
+      console.warn('Firebase is disabled. Notification not sent.');
+      throw new Error('Firebase is disabled due to missing configuration');
+    }
+
+    if (!this.firebaseAdmin) {
+      console.error('Firebase admin is not initialized');
+      throw new Error('Firebase admin is not initialized');
+    }
+
     const message: admin.messaging.Message = {
       data: {
         payload: JSON.stringify(data.payload),
@@ -37,13 +58,13 @@ export class FirebaseService {
       token: token,
     };
 
-    return new Promise((success, reject) =>
-      admin
+    return new Promise((resolve, reject) =>
+      this.firebaseAdmin
         .messaging()
         .send(message)
         .then((response) => {
           console.log('Notification sent:', response);
-          success(response);
+          resolve(response);
         })
         .catch((error) => {
           console.error('Error sending notification:', error);

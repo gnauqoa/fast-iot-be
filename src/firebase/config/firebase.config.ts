@@ -20,9 +20,17 @@ class EnvironmentVariablesValidator {
 export default registerAs<FirebaseConfig>('firebase', () => {
   validateConfig(process.env, EnvironmentVariablesValidator);
 
+  const projectId = process.env.FIREBASE_PROJECT_ID ?? '';
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL ?? '';
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY ?? '';
+
+  // Firebase is enabled only if all required config values are present and not empty
+  const enabled = !!(projectId && clientEmail && privateKey);
+
   return {
-    projectId: process.env.FIREBASE_PROJECT_ID ?? '',
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL ?? '',
-    privateKey: process.env.FIREBASE_PRIVATE_KEY ?? '',
+    enabled,
+    projectId,
+    clientEmail,
+    privateKey,
   };
 });
